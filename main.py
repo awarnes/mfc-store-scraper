@@ -1,5 +1,13 @@
+'''
+Primary entry point for store scraping code.
+'''
+
+import csv
+import json
+import re
+import requests
+
 from bs4 import BeautifulSoup
-import requests, re, csv, json
 
 HUMMINGBIRD_WHOLESALE_BASE_URL: str = 'https://hummingbirdwholesale.com'
 PRODUCT_PAGE_SEARCH_SIZE: int = 25
@@ -9,12 +17,17 @@ def paginate(list_to_paginate, page_size=25):
     '''
     Split a list into sub-lists of size = page_size
     '''
-    return [list_to_paginate[index:index + page_size] for index in range(0, len(list_to_paginate), page_size)]
+    return [
+        list_to_paginate[index:index + page_size]
+        for index in range(0, len(list_to_paginate), page_size)
+    ]
 
-def all_product_ids(query_url, list_of_product_ids = []):
+def all_product_ids(query_url, list_of_product_ids = None):
     '''
     Get all product IDs associated with a query URL.
     '''
+    list_of_product_ids = list_of_product_ids or []
+
     # Get the HTML page content
     page = requests.get(HUMMINGBIRD_WHOLESALE_BASE_URL + query_url)
 
@@ -33,7 +46,10 @@ def all_product_ids(query_url, list_of_product_ids = []):
             available_products.append(product)
 
     # Collect the list of all product IDs on the page and format them 'properly'
-    list_of_product_ids += [re.sub('product-', '', product.attrs['id']) for product in available_products]
+    list_of_product_ids += [
+        re.sub('product-', '', product.attrs['id'])
+        for product in available_products
+    ]
 
     # Check for another page
     next_page = soup.find(class_='next')
@@ -74,7 +90,9 @@ def all_product_data(ids_to_search):
             if len(response_json) != len(page):
                 missing_products += [
                     product_id for product_id in page
-                    if re.sub('id:', '', product_id) not in [str(product['id']) for product in response_json]
+                    if re.sub('id:', '', product_id) not in [
+                        str(product['id']) for product in response_json
+                    ]
                 ]
         else:
             response.raise_for_status()
@@ -95,10 +113,10 @@ with open('./hummingbird_products.json', 'w') as jsonfile:
         print(missing_products)
 
 
-########################################################################################################################################################
+####################################################################################
 # NEXT: PARSE THE RETURNED JSON INTO CSV AND SAVE TO FILE
 # BONUS: FIGURE OUT IF SHOPIFY ALLOWS YOU TO POST A CSV FILE DIRECTLY TO YOUR STORE
-########################################################################################################################################################
+####################################################################################
 def description_filter_text(tag):
     '''
     Used to filter retrieved description HTML data to usable parts.
@@ -114,13 +132,13 @@ def description_filter_text(tag):
                 # Don't include <p> tags with <img> objects in them
                 if child.name == 'img':
                     include = False
-            
+
             return include
 
     if tag.name in ['ul', 'ol', 'table']:
         # Generally include all <ul>, <ol>, and <table> tags (and their children)
         return True
-    
+
     return False
 
 field_names = {
@@ -264,7 +282,7 @@ for product in test_data:
 
     featured_image_src = product['featured_image']
     if featured_image_src.startswith('https:'):
-        new_product['Image Src'] = featured_image_src 
+        new_product['Image Src'] = featured_image_src
     else:
         new_product['Image Src'] = 'https:' + featured_image_src
 

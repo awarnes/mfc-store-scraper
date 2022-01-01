@@ -16,6 +16,11 @@ Please feel free to update anything you see fit and create a pull request on [Gi
 
 Don't forget to update any documentation and write any tests that are affected by your changes.
 
+Check pylint:
+```bash
+pylint `ls -R | grep .py$ | xargs`
+```
+
 ## Future
 Future development projects/ideas:
 * [ ] Write full unit and integration tests for system so we know when something changes in a bad way

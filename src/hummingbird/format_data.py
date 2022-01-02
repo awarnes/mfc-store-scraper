@@ -129,7 +129,8 @@ def is_multi_pack(variant):
     Checks if a product is considered a multi_pack product.
     Must have an `option1` key that matches the regex below
     '''
-    return re.match(r'.*\d+\s?x.*', variant['option1']) in MULTI_PACK_CONVERTER
+    match = re.match(r'.*\d+\s?x.*', variant['option1'])
+    return match[0] in MULTI_PACK_CONVERTER if match else False
 
 def get_multi_pack_amount(variant):
     '''

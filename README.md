@@ -18,7 +18,7 @@ Don't forget to update any documentation and write any tests that are affected b
 
 Check pylint:
 ```bash
-pylint `ls -R | grep .py$ | xargs`
+pylint $(find . -name "*.py" | xargs)
 ```
 
 ## Future

@@ -1,3 +1,4 @@
 /outputs/*
 !.gitkeep
 .vscode
+__pycache__

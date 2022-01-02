@@ -73,6 +73,7 @@ def format_products(product_data):
         new_product['Variant Grams'] = 0
         new_product['Variant Inventory Policy'] = 'continue'
         new_product['Variant Fulfillment Service'] = 'manual'
+        # pylint: disable-next=line-too-long
         new_product['Variant Price'] = get_product_price(primary_variant['price'], multi_pack_amount)
         new_product['Variant Inventory Tracker'] = 'shopify' if multi_pack else None
 
@@ -145,7 +146,7 @@ def get_product_price(price, multi_pack_amount=None):
     If there are partial pennies, then we should always round up.
     '''
     if multi_pack_amount:
-        if price % multi_pack_amount:   
+        if price % multi_pack_amount:
             price = (math.floor(price / multi_pack_amount) + 1)
         else:
             price /= multi_pack_amount

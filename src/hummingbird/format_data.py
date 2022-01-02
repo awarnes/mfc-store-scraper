@@ -1,6 +1,7 @@
 '''
 Formatting functions for Hummingbird Wholesale data retrieval
 '''
+import math
 import re
 
 from bs4 import BeautifulSoup
@@ -72,7 +73,8 @@ def format_products(product_data):
         new_product['Variant Grams'] = 0
         new_product['Variant Inventory Policy'] = 'continue'
         new_product['Variant Fulfillment Service'] = 'manual'
-        new_product['Variant Price'] = get_product_price(product['price'], multi_pack_amount)
+        # pylint: disable-next=line-too-long
+        new_product['Variant Price'] = get_product_price(primary_variant['price'], multi_pack_amount)
         new_product['Variant Inventory Tracker'] = 'shopify' if multi_pack else None
 
         new_product['Image Src'] = format_image_src(product['featured_image'])
@@ -128,7 +130,8 @@ def is_multi_pack(variant):
     Checks if a product is considered a multi_pack product.
     Must have an `option1` key that matches the regex below
     '''
-    return re.match(r'.*\d+\s?x.*', variant['option1']) in MULTI_PACK_CONVERTER
+    match = re.match(r'.*\d+\s?x.*', variant['option1'])
+    return match[0] in MULTI_PACK_CONVERTER if match else False
 
 def get_multi_pack_amount(variant):
     '''
@@ -140,5 +143,12 @@ def get_multi_pack_amount(variant):
 def get_product_price(price, multi_pack_amount=None):
     '''
     Returns the proper price.
+    If there are partial pennies, then we should always round up.
     '''
-    return price / 100 * (multi_pack_amount if multi_pack_amount else 1)
+    if multi_pack_amount:
+        if price % multi_pack_amount:
+            price = (math.floor(price / multi_pack_amount) + 1)
+        else:
+            price /= multi_pack_amount
+
+    return price / 100

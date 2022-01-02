@@ -73,7 +73,7 @@ def format_products(product_data):
         new_product['Variant Grams'] = 0
         new_product['Variant Inventory Policy'] = 'continue'
         new_product['Variant Fulfillment Service'] = 'manual'
-        new_product['Variant Price'] = get_product_price(product['price'], multi_pack_amount)
+        new_product['Variant Price'] = get_product_price(primary_variant['price'], multi_pack_amount)
         new_product['Variant Inventory Tracker'] = 'shopify' if multi_pack else None
 
         new_product['Image Src'] = format_image_src(product['featured_image'])

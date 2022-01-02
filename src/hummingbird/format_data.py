@@ -19,20 +19,29 @@ from src.constants import (
 # pylint: disable=consider-using-f-string
 
 def format_products(product_data):
+    '''
+    Formats product data from Hummingbird Wholesale for import into Shopify store
+    '''
+    # pylint: disable=too-many-statements
     formatted_products = []
 
     for product in product_data:
         # BASE PRODUCT
         new_product = {}
         multi_pack = False
+        multi_pack_amount = None
 
         new_product['Handle'] = product['id']
         new_product['Title'] = product['title']
 
         description_html = product['description']
         description_soup = BeautifulSoup(description_html, 'html.parser')
-        new_product['Body (HTML)'] = ''.join(['<h4>From Hummingbird Wholesale</h4>'] +
-            [re.sub('\n', '', str(tag)) for tag in description_soup.find_all(description_filter_text)]
+        new_product['Body (HTML)'] = ''.join(
+            ['<h4>From Hummingbird Wholesale</h4>'] +
+            [
+                re.sub('\n', '', str(tag))
+                for tag in description_soup.find_all(description_filter_text)
+            ]
         )
 
         new_product['Vendor'] = HUMMINGBIRD_WHOLESALE_VENDOR
@@ -63,7 +72,7 @@ def format_products(product_data):
         new_product['Variant Grams'] = 0
         new_product['Variant Inventory Policy'] = 'continue'
         new_product['Variant Fulfillment Service'] = 'manual'
-        new_product['Variant Price'] = product['price'] / 100 * (multi_pack_amount if multi_pack_amount else 1)
+        new_product['Variant Price'] = get_product_price(product['price'], multi_pack_amount)
         new_product['Variant Inventory Tracker'] = 'shopify' if multi_pack else None
 
         new_product['Image Src'] = format_image_src(product['featured_image'])
@@ -80,6 +89,7 @@ def format_products(product_data):
         for variant in product['variants'][1:]:
             new_variant = {}
             multi_pack = False
+            multi_pack_amount = None
 
             new_variant['Handle'] = new_product['Handle']
 
@@ -95,11 +105,14 @@ def format_products(product_data):
                 new_variant['Option1 Value'] = variant['option1']
 
             new_variant['Variant SKU'] = variant['sku']
+
             new_variant['Variant Grams'] = SHOPIFY_IGNORE_WEIGHT
             new_variant['Variant Inventory Policy'] = SHOPIFY_VARIANT_INVENTORY_POLICY_CONTINUE
             new_variant['Variant Fulfillment Service'] = SHOPIFY_VARIANT_FULFILLMENT_SERVICE_MANUAL
-            new_variant['Variant Price'] = variant['price'] / 100 * (multi_pack_amount if multi_pack_amount else 1)
-            new_variant['Variant Inventory Tracker'] = SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY if multi_pack else None
+
+            new_variant['Variant Price'] = get_product_price(variant['price'], multi_pack_amount)
+            new_variant['Variant Inventory Tracker'] = \
+                SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY if multi_pack else None
 
             if variant['featured_image']:
                 new_variant['Variant Image'] = variant['featured_image']['src']
@@ -112,14 +125,20 @@ def format_products(product_data):
 
 def is_multi_pack(variant):
     '''
-    Checks if a product is considered a multi_pack product.;
+    Checks if a product is considered a multi_pack product.
     Must have an `option1` key that matches the regex below
     '''
     return re.match(r'.*\d+\s?x.*', variant['option1']) in MULTI_PACK_CONVERTER
 
 def get_multi_pack_amount(variant):
     '''
-    Checks if a product is considered a multi_pack product.;
+    Returns the multi_pack_amount (_6_ x 6) for a given product (variant).
     Must have an `option1` key that matches the regex below
     '''
     return int(re.search(r'\d+(?=\s?x)', variant['option1'])[0])
+
+def get_product_price(price, multi_pack_amount=None):
+    '''
+    Returns the proper price.
+    '''
+    return price / 100 * (multi_pack_amount if multi_pack_amount else 1)

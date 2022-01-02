@@ -3,10 +3,13 @@ Getting data from the Hummingbird Wholesale site
 '''
 
 import re
+
 from bs4 import BeautifulSoup
 import requests
-from src.constants import HUMMINGBIRD_WHOLESALE_BASE_URL, PRODUCT_PAGE_SEARCH_SIZE
+
+from src.constants import PRODUCT_PAGE_SEARCH_SIZE
 from src.utils import paginate
+from src.hummingbird.constants import HUMMINGBIRD_WHOLESALE_BASE_URL
 
 def all_product_ids(query_url, list_of_product_ids = None):
     '''

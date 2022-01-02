@@ -41,5 +41,5 @@ def format_image_src(image_src: str):
     '''
     if image_src.startswith('https:'):
         return image_src
-    else:
-        return 'https:' + image_src 
+
+    return 'https:' + image_src

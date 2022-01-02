@@ -5,6 +5,8 @@ Hummingbird Wholesale data processing specific constants
 HUMMINGBIRD_WHOLESALE_BASE_URL: str = 'https://hummingbirdwholesale.com'
 ALL_PRODUCTS_URL: str = '/collections/all'
 
+HUMMINGBIRD_WHOLESALE_VENDOR = 'Hummingbird Wholesale'
+
 MULTI_PACK_CONVERTER = {
     'Case of 6 x 5.5 lb / 1/2 gal Jars': '5.5 lb / 1/2 gal Jar',
     'case of 6 x 51 oz can': '51 oz can',

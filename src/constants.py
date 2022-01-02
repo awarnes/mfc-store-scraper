@@ -5,6 +5,16 @@ Generally should be sorted/organized by use case
 '''
 PRODUCT_PAGE_SEARCH_SIZE: int = 25
 
+SHOPIFY_STATUS_ACTIVE: str = 'active'
+SHOPIFY_STATUS_DRAFT: str = 'draft'
+SHOPIFY_IGNORE_WEIGHT: int = 0
+SHOPIFY_IS_ONLINE_STORE: bool = True
+
+SHOPIFY_VARIANT_FULFILLMENT_SERVICE_MANUAL: str = 'manual'
+SHOPIFY_VARIANT_INVENTORY_POLICY_CONTINUE: str = 'continue'
+SHOPIFY_VARIANT_INVENTORY_POLICY_DENY: str = 'deny'
+SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY: str = 'shopify'
+
 SHOPIFY_CSV_FIELD_NAMES = {
     "handle": "Handle",
     "title": "Title",

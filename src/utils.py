@@ -34,3 +34,12 @@ def paginate(list_to_paginate, page_size=25):
         list_to_paginate[index:index + page_size]
         for index in range(0, len(list_to_paginate), page_size)
     ]
+
+def format_image_src(image_src: str):
+    '''
+    Ensures properly accessible formatting for src images during imports
+    '''
+    if image_src.startswith('https:'):
+        return image_src
+    else:
+        return 'https:' + image_src 

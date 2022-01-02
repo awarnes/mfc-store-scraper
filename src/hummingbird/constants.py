@@ -2,8 +2,10 @@
 Hummingbird Wholesale data processing specific constants
 '''
 
+HUMMINGBIRD_DATA_FILE: str = 'hummingbird_products.json'
+HUMMINGBIRD_CSV_FILE: str = 'hummingbird_products.csv'
 HUMMINGBIRD_WHOLESALE_BASE_URL: str = 'https://hummingbirdwholesale.com'
-ALL_PRODUCTS_URL: str = '/collections/all'
+HUMMINGBIRD_ALL_PRODUCTS_URL: str = '/collections/all'
 
 HUMMINGBIRD_WHOLESALE_VENDOR = 'Hummingbird Wholesale'
 

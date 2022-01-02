@@ -4,33 +4,56 @@ Primary entry point for store scraping code.
 
 import csv
 import json
+import os
 
 from src.constants import SHOPIFY_CSV_FIELD_NAMES
-from src.hummingbird.constants import ALL_PRODUCTS_URL
+from src.hummingbird.constants import (
+    HUMMINGBIRD_ALL_PRODUCTS_URL,
+    HUMMINGBIRD_DATA_FILE,
+    HUMMINGBIRD_CSV_FILE)
 from src.hummingbird.get_data import all_product_ids, all_product_data
 from src.hummingbird.format_data import format_products
 
-with open('./hummingbird_products.json', 'w', encoding='utf8') as jsonfile:
-    print('Retrieving product data...')
-    product_data, missing_products = all_product_data(all_product_ids(ALL_PRODUCTS_URL))
-    print('Saving all products to file...')
-    json.dump(product_data, jsonfile)
-    print('Products saved to file...')
+LOCAL_DATA_PATH = os.path.dirname(os.path.abspath(__file__))
+
+def collect_data(save_to_file=True):
+    '''
+    Collect data from site, write to file if save_to_file == True
+    '''
+    product_data, missing_products = all_product_data(all_product_ids(HUMMINGBIRD_ALL_PRODUCTS_URL))
+
     if missing_products:
         print('~~~Some Product IDs are Missing From Product Data!!~~~')
         print(missing_products)
 
-product_data = {}
+    if save_to_file:
+        with open(os.path.join(LOCAL_DATA_PATH, HUMMINGBIRD_DATA_FILE), 'w', encoding='utf8') as jsonfile:
+            json.dump(product_data, jsonfile)
 
-with open('./hummingbird_products.json', encoding='utf8') as f:
-    print("Loading data from file...")
-    product_data = json.load(f)
+    return product_data, missing_products
 
-products_to_write = format_products(product_data)
 
-with open('products.csv', 'w', encoding='utf8') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=SHOPIFY_CSV_FIELD_NAMES.values())
+def format_data(product_data, from_file_path=None):
+    '''
+    Formats collected data and saves as CSV for Shopify import.
+    Optionally, can import data from file instead of object
+    '''
+    if from_file_path:
+        product_data = []
+        with open(os.path.join(LOCAL_DATA_PATH, from_file_path), encoding='utf8') as data_file:
+            print(f'Loading data from file {from_file_path}...')
+            product_data = json.load(data_file)
+    
+    products_to_write = format_products(product_data)
 
-    writer.writeheader()
+    with open(os.path.join(LOCAL_DATA_PATH, HUMMINGBIRD_CSV_FILE), 'w', encoding='utf8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=SHOPIFY_CSV_FIELD_NAMES.values())
 
-    writer.writerows(products_to_write)
+        writer.writeheader()
+
+        writer.writerows(products_to_write)
+
+if __name__ == '__main__':
+    product_data, _ = collect_data(save_to_file=True)
+
+    format_data(product_data)

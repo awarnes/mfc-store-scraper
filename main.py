@@ -9,20 +9,10 @@ import requests
 
 from bs4 import BeautifulSoup
 
+import src.constants as const
+import src.utils as utils
+
 # pylint: disable=consider-using-f-string
-
-HUMMINGBIRD_WHOLESALE_BASE_URL: str = 'https://hummingbirdwholesale.com'
-PRODUCT_PAGE_SEARCH_SIZE: int = 25
-ALL_PRODUCTS_URL: str = '/collections/all'
-
-def paginate(list_to_paginate, page_size=25):
-    '''
-    Split a list into sub-lists of size = page_size
-    '''
-    return [
-        list_to_paginate[index:index + page_size]
-        for index in range(0, len(list_to_paginate), page_size)
-    ]
 
 def all_product_ids(query_url, list_of_product_ids = None):
     '''
@@ -31,7 +21,7 @@ def all_product_ids(query_url, list_of_product_ids = None):
     list_of_product_ids = list_of_product_ids or []
 
     # Get the HTML page content
-    page = requests.get(HUMMINGBIRD_WHOLESALE_BASE_URL + query_url)
+    page = requests.get(const.HUMMINGBIRD_WHOLESALE_BASE_URL + query_url)
 
     # Parse the HTML into a BeautifulSoup object
     soup = BeautifulSoup(page.content, "html.parser")
@@ -74,7 +64,7 @@ def all_product_data(ids_to_search):
     print(f"Retrieving data for {len(searchable_ids)} total products...")
 
     # Paginate IDs into 'reasonable' chunks ¯\_(ツ)_/¯
-    paginated_ids = paginate(searchable_ids, PRODUCT_PAGE_SEARCH_SIZE)
+    paginated_ids = utils.paginate(searchable_ids, const.PRODUCT_PAGE_SEARCH_SIZE)
 
     product_data = [] # pylint: disable=redefined-outer-name
     missing_products = [] # pylint: disable=redefined-outer-name
@@ -82,7 +72,7 @@ def all_product_data(ids_to_search):
     for page_number, page in enumerate(paginated_ids):
         print(f'Page number {page_number} of {len(paginated_ids)}')
         response = requests.post(
-            f'{HUMMINGBIRD_WHOLESALE_BASE_URL}/search',
+            f'{const.HUMMINGBIRD_WHOLESALE_BASE_URL}/search',
             data=f'q={" OR ".join(page)}&view=globo.alsobought'
         )
         if response.ok:
@@ -106,7 +96,7 @@ def all_product_data(ids_to_search):
 
 with open('./hummingbird_products.json', 'w', encoding='utf8') as jsonfile:
     print('Retrieving product data...')
-    product_data, missing_products = all_product_data(all_product_ids(ALL_PRODUCTS_URL))
+    product_data, missing_products = all_product_data(all_product_ids(const.ALL_PRODUCTS_URL))
     print('Saving all products to file...')
     json.dump(product_data, jsonfile)
     print('Products saved to file...')
@@ -114,121 +104,6 @@ with open('./hummingbird_products.json', 'w', encoding='utf8') as jsonfile:
         print('~~~Some Product IDs are Missing From Product Data!!~~~')
         print(missing_products)
 
-
-####################################################################################
-# NEXT: PARSE THE RETURNED JSON INTO CSV AND SAVE TO FILE
-# BONUS: FIGURE OUT IF SHOPIFY ALLOWS YOU TO POST A CSV FILE DIRECTLY TO YOUR STORE
-####################################################################################
-def description_filter_text(tag):
-    '''
-    Used to filter retrieved description HTML data to usable parts.
-    '''
-    if tag.name == 'p':
-        if not tag.text.strip():
-            # Do not include empty <p> tags
-            return False
-        if tag.parent.name not in ['td']:
-            # Don't duplicate tags from tables
-            include = True
-            for child in tag.children:
-                # Don't include <p> tags with <img> objects in them
-                if child.name == 'img':
-                    include = False
-
-            return include
-
-    if tag.name in ['ul', 'ol', 'table']:
-        # Generally include all <ul>, <ol>, and <table> tags (and their children)
-        return True
-
-    return False
-
-field_names = {
-    "handle": "Handle",
-    "title": "Title",
-    "body": "Body (HTML)",
-    "vendor": "Vendor",
-    "tags": "Tags",
-    "published": "Published",
-    "option1_name": "Option1 Name",
-    "option1_value": "Option1 Value",
-    "option2_name": "Option2 Name",
-    "option2_value": "Option2 Value",
-    "option3_name": "Option3 Name",
-    "option3_value": "Option3 Value",
-    "variant_sku": "Variant SKU",
-    "variant_grams": "Variant Grams",
-    "variant_inventory_tracker": "Variant Inventory Tracker",
-    "variant_inventory_qty": "Variant Inventory Qty",
-    "variant_inventory_policy": "Variant Inventory Policy",
-    "variant_fulfillment_service": "Variant Fulfillment Service",
-    "variant_price": "Variant Price",
-    "variant_compare_at_price": "Variant Compare At Price",
-    "variant_requires_shipping": "Variant Requires Shipping",
-    "variant_taxable": "Variant Taxable",
-    "variant_barcode": "Variant Barcode",
-    "image_src": "Image Src",
-    "image_position": "Image Position",
-    "image_alt_text": "Image Alt Text",
-    "gift_card": "Gift Card",
-    "seo_title": "SEO Title",
-    "seo_description": "SEO Description",
-    "google_shopping_/_google_product_category": "Google Shopping / Google Product Category",
-    "google_shopping_/_gender": "Google Shopping / Gender",
-    "google_shopping_/_age_group": "Google Shopping / Age Group",
-    "google_shopping_/_mpn": "Google Shopping / MPN",
-    "google_shopping_/_adwords_grouping": "Google Shopping / AdWords Grouping",
-    "google_shopping_/_adwords_labels": "Google Shopping / AdWords Labels",
-    "google_shopping_/_condition": "Google Shopping / Condition",
-    "google_shopping_/_custom_product": "Google Shopping / Custom Product",
-    "google_shopping_/_custom_label_0": "Google Shopping / Custom Label 0",
-    "google_shopping_/_custom_label_1": "Google Shopping / Custom Label 1",
-    "google_shopping_/_custom_label_2": "Google Shopping / Custom Label 2",
-    "google_shopping_/_custom_label_3": "Google Shopping / Custom Label 3",
-    "google_shopping_/_custom_label_4": "Google Shopping / Custom Label 4",
-    "variant_image": "Variant Image",
-    "variant_weight_unit": "Variant Weight Unit",
-    "variant_tax_code": "Variant Tax Code",
-    "cost_per_item": "Cost per item",
-    "status": "Status",
-    "standard_product_type": "Standard Product Type",
-    "custom_product_type": "Custom Product Type"
-}
-
-multi_pack_converter = {
-    'Case of 6 x 5.5 lb / 1/2 gal Jars': '5.5 lb / 1/2 gal Jar',
-    'case of 6 x 51 oz can': '51 oz can',
-    'Case of 12 x 32 oz round glass decanters': '32 oz round glass decanter',
-    'Case of 12 x 1lb Jars': '1 lb jar',
-    'case of 8 x 2.5 oz bags': '2.5 oz bag',
-    'case of 10 x 2 lb bags': '2 lb bag',
-    'Case of 12 x 12 oz flat glass bottles': '12 oz flat glass bottle',
-    'Case of 12 x 3 oz tins': '3 oz tin',
-    '10 x  ½ oz Stand-Up Pouch': '½ oz Stand-Up Pouch',
-    'Case of 12 x 5 oz glass bottles': '5 oz glass bottle',
-    'case of 6 x 1 lb bags': '1 lb bag',
-    'case of 12 x 1 lb jar': '1 lb jar',
-    '16 lb case (4x4lb bags)': '4 lb bag',
-    '20 lb case (4x5 lb bag)': '5 lb bag',
-    'Case of 12 x 1lb jars': '1 lb jar',
-    'Case of 12 x 16 fl oz Jar': '16 fl oz jar',
-    '10 x  ½ oz Stand-up Pouch': '½ oz Stand-up Pouch',
-    '6 x 6 oz bags': '6 oz bag',
-    '4 x 5 lb bags': '5 lb bag',
-    'case of 6 x 6 oz bags': '6 oz bag',
-    'case of 6 x 1/2 lb bags': '1/2 lb bag',
-    'Case of 12 x 16 oz round glass decanters': '16 oz round glass decanter',
-    'case of 6 x 12oz bags': '12 oz bag',
-    'Case of 12 x 1 lb Jar': '1 lb jar',
-    'Case of 12 x 1 lb jars': '1 lb jar',
-    '20 lb case (4x5lb bags)': '5 lb bag',
-    'Case of 6 x 5.5 lb /1/2 gal Jars': '5.5 lb / 1/2 gal Jar',
-    'Case of 6 x 1/2 gal Glass Jugs': '1/2 gal glass jug',
-    '12 x 8.5 fl oz bottles': '8.5 fl oz bottle',
-    'case of 10 x 4 oz bag': '4 oz bag',
-    'Case of 12 x 2 oz tins': '2 oz tin',
-    'Case of 12 x 1 lb Jars': '1 lb jar'
-}
 
 products_to_write = []
 
@@ -268,8 +143,8 @@ for product in test_data:
     new_product['Option1 Name'] = product['options'][0].capitalize()
 
     # Check for a multi-pack product
-    if re.match(r'.*\d+\s?[x].*', primary_variant['option1']) in multi_pack_converter:
-        new_product['Option1 Value'] = multi_pack_converter[primary_variant['option1']]
+    if re.match(r'.*\d+\s?[x].*', primary_variant['option1']) in const.MULTI_PACK_CONVERTER:
+        new_product['Option1 Value'] = const.MULTI_PACK_CONVERTER[primary_variant['option1']]
         multi_pack = True # pylint: disable=invalid-name
     else:
         new_product['Option1 Value'] = primary_variant['option1']
@@ -307,8 +182,8 @@ for product in test_data:
         new_variant['Option1 Name'] = new_product['Option1 Name']
 
         # Check for a multi-pack product
-        if re.match(r'.*\d+\s?[x].*', variant['option1']) in multi_pack_converter:
-            new_variant['Option1 Value'] = multi_pack_converter[variant['option1']]
+        if re.match(r'.*\d+\s?[x].*', variant['option1']) in const.MULTI_PACK_CONVERTER:
+            new_variant['Option1 Value'] = const.MULTI_PACK_CONVERTER[variant['option1']]
             multi_pack = True # pylint: disable=invalid-name
         else:
             new_variant['Option1 Value'] = variant['option1']
@@ -328,7 +203,7 @@ for product in test_data:
         products_to_write.append(new_variant)
 
 with open('products.csv', 'w', encoding='utf8') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=field_names.values())
+    writer = csv.DictWriter(csvfile, fieldnames=const.SHOPIFY_CSV_FIELD_NAMES.values())
 
     writer.writeheader()
 

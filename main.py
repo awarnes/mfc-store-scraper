@@ -1,5 +1,15 @@
+'''
+Primary entry point for store scraping code.
+'''
+
+import csv
+import json
+import re
+import requests
+
 from bs4 import BeautifulSoup
-import requests, re, csv, json
+
+# pylint: disable=consider-using-f-string
 
 HUMMINGBIRD_WHOLESALE_BASE_URL: str = 'https://hummingbirdwholesale.com'
 PRODUCT_PAGE_SEARCH_SIZE: int = 25
@@ -9,12 +19,17 @@ def paginate(list_to_paginate, page_size=25):
     '''
     Split a list into sub-lists of size = page_size
     '''
-    return [list_to_paginate[index:index + page_size] for index in range(0, len(list_to_paginate), page_size)]
+    return [
+        list_to_paginate[index:index + page_size]
+        for index in range(0, len(list_to_paginate), page_size)
+    ]
 
-def all_product_ids(query_url, list_of_product_ids = []):
+def all_product_ids(query_url, list_of_product_ids = None):
     '''
     Get all product IDs associated with a query URL.
     '''
+    list_of_product_ids = list_of_product_ids or []
+
     # Get the HTML page content
     page = requests.get(HUMMINGBIRD_WHOLESALE_BASE_URL + query_url)
 
@@ -24,16 +39,19 @@ def all_product_ids(query_url, list_of_product_ids = []):
     # Get all possible products on a page
     found_products = soup.find_all(class_='quick-shop-modal')
 
-    available_products = list()
+    available_products = []
 
     # Verify the product isn't sold out (will fail to retrieve with query in next step)
-    for product in found_products:
-        sold_out = product.find(class_='sold_out').text
+    for found_product in found_products:
+        sold_out = found_product.find(class_='sold_out').text
         if not sold_out:
-            available_products.append(product)
+            available_products.append(found_product)
 
     # Collect the list of all product IDs on the page and format them 'properly'
-    list_of_product_ids += [re.sub('product-', '', product.attrs['id']) for product in available_products]
+    list_of_product_ids += [
+        re.sub('product-', '', product.attrs['id'])
+        for product in available_products
+    ]
 
     # Check for another page
     next_page = soup.find(class_='next')
@@ -58,8 +76,8 @@ def all_product_data(ids_to_search):
     # Paginate IDs into 'reasonable' chunks ¯\_(ツ)_/¯
     paginated_ids = paginate(searchable_ids, PRODUCT_PAGE_SEARCH_SIZE)
 
-    product_data = list()
-    missing_products = list()
+    product_data = [] # pylint: disable=redefined-outer-name
+    missing_products = [] # pylint: disable=redefined-outer-name
     # Get product data for each page grouping and add to products list
     for page_number, page in enumerate(paginated_ids):
         print(f'Page number {page_number} of {len(paginated_ids)}')
@@ -74,7 +92,9 @@ def all_product_data(ids_to_search):
             if len(response_json) != len(page):
                 missing_products += [
                     product_id for product_id in page
-                    if re.sub('id:', '', product_id) not in [str(product['id']) for product in response_json]
+                    if re.sub('id:', '', product_id) not in [
+                        str(product['id']) for product in response_json
+                    ]
                 ]
         else:
             response.raise_for_status()
@@ -84,7 +104,7 @@ def all_product_data(ids_to_search):
 
     return product_data, missing_products
 
-with open('./hummingbird_products.json', 'w') as jsonfile:
+with open('./hummingbird_products.json', 'w', encoding='utf8') as jsonfile:
     print('Retrieving product data...')
     product_data, missing_products = all_product_data(all_product_ids(ALL_PRODUCTS_URL))
     print('Saving all products to file...')
@@ -95,10 +115,10 @@ with open('./hummingbird_products.json', 'w') as jsonfile:
         print(missing_products)
 
 
-########################################################################################################################################################
+####################################################################################
 # NEXT: PARSE THE RETURNED JSON INTO CSV AND SAVE TO FILE
 # BONUS: FIGURE OUT IF SHOPIFY ALLOWS YOU TO POST A CSV FILE DIRECTLY TO YOUR STORE
-########################################################################################################################################################
+####################################################################################
 def description_filter_text(tag):
     '''
     Used to filter retrieved description HTML data to usable parts.
@@ -114,13 +134,13 @@ def description_filter_text(tag):
                 # Don't include <p> tags with <img> objects in them
                 if child.name == 'img':
                     include = False
-            
+
             return include
 
     if tag.name in ['ul', 'ol', 'table']:
         # Generally include all <ul>, <ol>, and <table> tags (and their children)
         return True
-    
+
     return False
 
 field_names = {
@@ -210,18 +230,18 @@ multi_pack_converter = {
     'Case of 12 x 1 lb Jars': '1 lb jar'
 }
 
-products_to_write = list()
+products_to_write = []
 
-test_data = dict()
+test_data = {}
 
-with open('./hummingbird_products.json') as f:
+with open('./hummingbird_products.json', encoding='utf8') as f:
     print("Loading data from file...")
     test_data = json.load(f)
 
 for product in test_data:
     # BASE PRODUCT
-    new_product = dict()
-    multi_pack = False
+    new_product = {}
+    multi_pack = False # pylint: disable=invalid-name
 
     new_product['Handle'] = product['id']
     new_product['Title'] = product['title']
@@ -248,9 +268,9 @@ for product in test_data:
     new_product['Option1 Name'] = product['options'][0].capitalize()
 
     # Check for a multi-pack product
-    if re.match(r'.*\d+\s?[x].*', primary_variant['option1']) in multi_pack_converter.keys():
+    if re.match(r'.*\d+\s?[x].*', primary_variant['option1']) in multi_pack_converter:
         new_product['Option1 Value'] = multi_pack_converter[primary_variant['option1']]
-        multi_pack = True
+        multi_pack = True # pylint: disable=invalid-name
     else:
         new_product['Option1 Value'] = primary_variant['option1']
 
@@ -264,7 +284,7 @@ for product in test_data:
 
     featured_image_src = product['featured_image']
     if featured_image_src.startswith('https:'):
-        new_product['Image Src'] = featured_image_src 
+        new_product['Image Src'] = featured_image_src
     else:
         new_product['Image Src'] = 'https:' + featured_image_src
 
@@ -278,8 +298,8 @@ for product in test_data:
 
     # PRODUCT VARIANTS
     for variant in product['variants'][1:]:
-        new_variant = dict()
-        multi_pack = False
+        new_variant = {}
+        multi_pack = False # pylint: disable=invalid-name
 
         new_variant['Handle'] = new_product['Handle']
 
@@ -287,9 +307,9 @@ for product in test_data:
         new_variant['Option1 Name'] = new_product['Option1 Name']
 
         # Check for a multi-pack product
-        if re.match(r'.*\d+\s?[x].*', variant['option1']) in multi_pack_converter.keys():
+        if re.match(r'.*\d+\s?[x].*', variant['option1']) in multi_pack_converter:
             new_variant['Option1 Value'] = multi_pack_converter[variant['option1']]
-            multi_pack = True
+            multi_pack = True # pylint: disable=invalid-name
         else:
             new_variant['Option1 Value'] = variant['option1']
 
@@ -307,7 +327,7 @@ for product in test_data:
 
         products_to_write.append(new_variant)
 
-with open('products.csv', 'w') as csvfile:
+with open('products.csv', 'w', encoding='utf8') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=field_names.values())
 
     writer.writeheader()

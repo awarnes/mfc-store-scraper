@@ -28,9 +28,26 @@ Don't forget to update any documentation and write any tests that are affected b
 
 We use pylint to check each pull request and make sure everything is in line with standard styles. You will need to lint and fix anything that doesn't pass the check before you can merge your PR. Feel free to run the check below before pushing to your branch so that you're ready to go when you make your PR.
 
-Check pylint:
+### Lint repo with pylint:
 ```bash
 pylint $(find . -name "*.py" | xargs)
+```
+
+### Running tests:
+Tests are written using the [unittest](https://docs.python.org/3/library/unittest.html) builtin library.
+
+To run all tests for the project:
+```bash
+python -m unittest discover -s tests
+```
+#### Unit tests
+```bash
+python -m unittest discover -s tests/unit
+```
+
+#### Integration tests
+```bash
+python -m unittest discover -s tests/integration
 ```
 
 ## Future

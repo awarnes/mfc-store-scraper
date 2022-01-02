@@ -14,7 +14,10 @@ from src.hummingbird.constants import (
 from src.hummingbird.get_data import all_product_ids, all_product_data
 from src.hummingbird.format_data import format_products
 
-LOCAL_DATA_PATH = os.path.dirname(os.path.abspath(__file__))
+LOCAL_DATA_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    'outputs'
+)
 
 def collect_data(save_to_file=True):
     '''

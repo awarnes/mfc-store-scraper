@@ -1,6 +1,7 @@
 '''
 Formatting functions for Hummingbird Wholesale data retrieval
 '''
+import math
 import re
 
 from bs4 import BeautifulSoup
@@ -140,5 +141,12 @@ def get_multi_pack_amount(variant):
 def get_product_price(price, multi_pack_amount=None):
     '''
     Returns the proper price.
+    If there are partial pennies, then we should always round up.
     '''
-    return price / 100 * (multi_pack_amount if multi_pack_amount else 1)
+    if multi_pack_amount:
+        if price % multi_pack_amount:   
+            price = (math.floor(price / multi_pack_amount) + 1)
+        else:
+            price /= multi_pack_amount
+
+    return price / 100

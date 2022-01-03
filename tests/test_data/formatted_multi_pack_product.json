@@ -1,0 +1,36 @@
+[
+  {
+    "Handle": 4383082479664,
+    "Title": "Dark Chocolate Covered Hazelnuts",
+    "Body (HTML)": "<h4>From Hummingbird Wholesale</h4><p>We are very excited to share with you our Organic, high quality, unique chocolate-covered treats. What makes these Hummingbird products unique?</p><ul><li>Hummingbird Exclusive\u2014We make these in small batches right here in Eugene, Oregon.</li><li>Made with Fair Trade, Organic, 70% Dark Chocolate that does not contain soy lecithin nor dairy ingredients!</li><li>Made with our Organic Hazelnuts grown in Oregon by family farmers!</li></ul><table><tbody><tr><td><p>Origin</p></td><td><p>Oregon</p></td></tr><tr><td><p>Storage Info</p></td><td><p>Store at room temperatures and out of direct sunlight</p></td></tr><tr><td><p>Shelf Life</p></td><td><p>1 year of Julian date</p></td></tr><tr><td><p>Ingredients</p></td><td><p>Fair Trade Organic Dark Chocolate (Organic Cocoa Liquor, Organic Sugar, Organic Cocoa Butter), Organic Roasted Oregon Hazelnuts, Organic Cocoa Powder</p></td></tr><tr><td><p>Allergens</p></td><td><p>Hazelnuts</p></td></tr></tbody></table>",
+    "Vendor": "Hummingbird Wholesale",
+    "Tags": "chocolate covered,nuts & seeds",
+    "Published": true,
+    "Option1 Name": "Size",
+    "Option1 Value": "6 oz bag",
+    "Variant SKU": "SN102-6",
+    "Variant Grams": 0,
+    "Variant Inventory Policy": "continue",
+    "Variant Fulfillment Service": "manual",
+    "Variant Price": 8.8,
+    "Variant Inventory Tracker": "shopify",
+    "Image Src": "https://cdn.shopify.com/s/files/1/0014/7125/0476/products/chocolatecoveredhazelnuts6-1024.jpg?v=1587061715",
+    "Variant Image": "https://cdn.shopify.com/s/files/1/0014/7125/0476/products/chocolatecoveredhazelnuts6-1024.jpg?v=1587061715",
+    "Image Alt Text": "Dark Chocolate Covered Hazelnuts",
+    "Status": "draft"
+  },
+  {
+    "Handle": 4383082479664,
+    "Published": true,
+    "Option1 Name": "Size",
+    "Option1 Value": "2.5 oz bag",
+    "Variant SKU": "SN106-8",
+    "Variant Grams": 0,
+    "Variant Inventory Policy": "continue",
+    "Variant Fulfillment Service": "manual",
+    "Variant Price": 4.69,
+    "Variant Inventory Tracker": "shopify",
+    "Variant Image": "https://cdn.shopify.com/s/files/1/0014/7125/0476/products/chocolatecoveredhazelnuts2.5-1000.jpg?v=1587061715",
+    "Status": "draft"
+  }
+]

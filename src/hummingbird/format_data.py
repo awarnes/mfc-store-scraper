@@ -145,7 +145,7 @@ def get_multi_pack_amount(variant):
         match = re.search(r'\d+(?=\s?x)', variant['option1'])
     except KeyError:
         return 1
-    
+
     return int(match[0]) if match else 1
 
 def get_product_price(price, multi_pack_amount=None):

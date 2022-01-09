@@ -13,6 +13,8 @@ from requests.compat import urlparse
 from src.hummingbird.get_data import HummingbirdException, all_product_data, all_product_ids
 from src.hummingbird.constants import HUMMINGBIRD_ALL_PRODUCTS_URL, HUMMINGBIRD_WHOLESALE_BASE_URL
 
+# pylint: disable=line-too-long,missing-function-docstring,missing-class-docstring,too-few-public-methods
+
 LOCAL_TEST_DATA_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     '..',
@@ -21,16 +23,17 @@ LOCAL_TEST_DATA_PATH = os.path.join(
 )
 
 def mocked_html_data(filename):
-    with open(os.path.join(LOCAL_TEST_DATA_PATH, filename)) as htmlfile:
+    with open(os.path.join(LOCAL_TEST_DATA_PATH, filename), encoding='utf8') as htmlfile:
         return htmlfile.read()
 
 # This method will be used by the mock to replace requests.get
+# pylint: disable-next=unused-argument
 def mocked_requests_get(*args, **kwargs):
     class MockResponse:
         def __init__(self, data, status_code):
             self.status_code = status_code
             self.content = data
-        
+
     if args[0] == HUMMINGBIRD_WHOLESALE_BASE_URL + HUMMINGBIRD_ALL_PRODUCTS_URL:
         return MockResponse(mocked_html_data('id_test_1.html'), 200)
 
@@ -48,27 +51,28 @@ def mocked_requests_post(*args, **kwargs):
         def __init__(self, data, status_code):
             self.status_code = status_code
             self.data = data
-            self.ok = True if status_code < 400 else False
-        
+            # pylint: disable-next=invalid-name
+            self.ok = status_code < 400
+
         def json(self):
             return self.data
-        
+
         def raise_for_status(self):
-            raise HTTPError()
-        
+            raise HTTPError(self.status_code)
+
     if request_url.startswith(HUMMINGBIRD_WHOLESALE_BASE_URL + '/search'):
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json')) as jsonfile:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json'), encoding='utf8') as jsonfile:
             data = json.load(jsonfile)
             query_ids = re.findall(r'(\d+)', urlparse(request_url).query)
             response_data = []
 
-            for id in query_ids:
+            for identifier in query_ids:
                 for product in data:
-                    if str(product['id']) == str(id):
+                    if str(product['id']) == str(identifier):
                         response_data.append(product)
 
             return MockResponse(response_data, 200)
-    
+
     if len(re.findall(r'(\d+)', urlparse(request_url).query)) < 1:
         return MockResponse(None, 400)
 
@@ -144,13 +148,15 @@ class TestAllProductIds(unittest.TestCase):
 class TestAllProductData(unittest.TestCase):
     # We patch 'requests.post' with our own method. The mock object is passed in to our test case method.
     @mock.patch('src.hummingbird.get_data.requests.post', side_effect=mocked_requests_post)
+    # pylint: disable-next=unused-argument
     def test_get_all_product_data(self, mock_post):
         returned_data, _ = all_product_data(['1089411285036'])
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json')) as jsonfile:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json'), encoding='utf8') as jsonfile:
             data = json.load(jsonfile)
             self.assertEqual(returned_data, [data[0]])
 
     @mock.patch('src.hummingbird.get_data.requests.post', side_effect=mocked_requests_post)
+    # pylint: disable-next=unused-argument
     def test_improper_query_errors(self, mock_post):
         self.assertRaises(HummingbirdException, all_product_data, [])
 

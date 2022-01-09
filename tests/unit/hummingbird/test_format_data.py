@@ -2,7 +2,6 @@
 Tests src.hummingbird.format_data functionality
 '''
 import json
-from logging import error
 import os
 import unittest
 
@@ -12,6 +11,8 @@ from src.hummingbird.format_data import (
     get_multi_pack_amount,
     get_product_price
 )
+
+# pylint: disable=line-too-long,missing-function-docstring,missing-class-docstring
 
 LOCAL_TEST_DATA_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -24,7 +25,7 @@ class TestIsMultiPack(unittest.TestCase):
     def setUp(self) -> None:
         self.data = None
 
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json')) as jsonfile:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json'), encoding='utf8') as jsonfile:
             self.data = json.load(jsonfile)
 
     def test_returns_true_if_is_multi_pack(self):
@@ -47,9 +48,9 @@ class TestGetMultiPackAmount(unittest.TestCase):
     def setUp(self) -> None:
         self.data = None
 
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json')) as jsonfile:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json'), encoding='utf8') as jsonfile:
             self.data = json.load(jsonfile)
-    
+
     def test_returns_the_correct_amount(self):
         multi_pack_variant_one = self.data[2]['variants'][0]
         multi_pack_variant_two = self.data[2]['variants'][1]
@@ -74,7 +75,7 @@ class TestGetProductPrice(unittest.TestCase):
     def test_returns_right_value_with_no_multi_pack_amount(self):
         price = 5000
         self.assertEqual(get_product_price(price), 50.0)
-    
+
     def test_returns_right_value_with_evenly_divisible_dollars_multi_pack_amount(self):
         price = 5000
         multi_pack_amount = 5
@@ -94,21 +95,21 @@ class TestFormatProducts(unittest.TestCase):
     def setUp(self) -> None:
         self.raw_data = None
 
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json')) as jsonfile:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json'), encoding='utf8') as jsonfile:
             self.raw_data = json.load(jsonfile)
 
     def test_returns_properly_formatted_single_variant_product(self):
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'formatted_single_variant_product.json')) as formatted_file:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'formatted_single_variant_product.json'), encoding='utf8') as formatted_file:
             formatted_data = json.load(formatted_file)
             self.assertEqual(format_products([self.raw_data[0]]), formatted_data)
 
     def test_returns_properly_formatted_multi_variant_product(self):
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'formatted_multi_variant_product.json')) as formatted_file:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'formatted_multi_variant_product.json'), encoding='utf8') as formatted_file:
             formatted_data = json.load(formatted_file)
             self.assertEqual(format_products([self.raw_data[1]]), formatted_data)
 
     def test_returns_properly_formatted_multi_pack_product(self):
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'formatted_multi_pack_product.json')) as formatted_file:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'formatted_multi_pack_product.json'), encoding='utf8') as formatted_file:
             formatted_data = json.load(formatted_file)
             self.assertEqual(format_products([self.raw_data[2]]), formatted_data)
 

@@ -2,10 +2,15 @@
 Unit testing the src/utils.py file
 '''
 
+import json
 import os
 import unittest
 
+from bs4 import BeautifulSoup
+
 from src.utils import format_image_src, paginate, description_filter_text
+
+# pylint: disable=line-too-long,missing-function-docstring,missing-class-docstring
 
 LOCAL_TEST_DATA_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -81,12 +86,10 @@ class TestPaginate(unittest.TestCase):
 
 class TestDescriptionFilterText(unittest.TestCase):
     def setUp(self) -> None:
-        import json
-        from bs4 import BeautifulSoup
 
         self.soup_p_and_table = None
         self.soup_p_plus = None
-        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json')) as jsonfile:
+        with open(os.path.join(LOCAL_TEST_DATA_PATH, 'test_data.json'), encoding='utf8') as jsonfile:
             data = json.load(jsonfile)
             # Amaranth
             description_p_and_table = data[0]['description']
@@ -94,7 +97,7 @@ class TestDescriptionFilterText(unittest.TestCase):
             description_p_plus = data[2]['description']
             self.soup_p_and_table = BeautifulSoup(description_p_and_table, 'html.parser')
             self.soup_p_plus = BeautifulSoup(description_p_plus, 'html.parser')
-    
+
     def test_filter_includes_p_tags(self):
         all_p_tags = self.soup_p_and_table.find_all('p')
 

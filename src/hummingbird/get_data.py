@@ -11,6 +11,13 @@ from src.constants import PRODUCT_PAGE_SEARCH_SIZE
 from src.utils import paginate
 from src.hummingbird.constants import HUMMINGBIRD_WHOLESALE_BASE_URL
 
+class HummingbirdException(Exception):
+    def __init__(self, value):
+        self.value = value
+ 
+    def __str__(self):
+        return(repr(self.value))
+
 def all_product_ids(query_url, list_of_product_ids = None):
     '''
     Get all product IDs associated with a query URL.
@@ -57,7 +64,8 @@ def all_product_data(ids_to_search):
     '''
     # Get unique IDs and format IDs to search
     searchable_ids = [f'id:{id}' for id in set(ids_to_search)]
-
+    if (len(searchable_ids) < 1):
+        raise HummingbirdException("There are no id's to search!")
     print(f"Retrieving data for {len(searchable_ids)} total products...")
 
     # Paginate IDs into 'reasonable' chunks ¯\_(ツ)_/¯

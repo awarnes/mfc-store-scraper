@@ -130,7 +130,10 @@ def is_multi_pack(variant):
     Checks if a product is considered a multi_pack product.
     Must have an `option1` key that matches the regex below
     '''
-    match = re.match(r'.*\d+\s?x.*', variant['option1'])
+    try:
+        match = re.match(r'.*\d+\s?x.*', variant['option1'])
+    except KeyError:
+        return False
     return match[0] in MULTI_PACK_CONVERTER if match else False
 
 def get_multi_pack_amount(variant):
@@ -138,7 +141,12 @@ def get_multi_pack_amount(variant):
     Returns the multi_pack_amount (_6_ x 6) for a given product (variant).
     Must have an `option1` key that matches the regex below
     '''
-    return int(re.search(r'\d+(?=\s?x)', variant['option1'])[0])
+    try:
+        match = re.search(r'\d+(?=\s?x)', variant['option1'])
+    except KeyError:
+        return 1
+
+    return int(match[0]) if match else 1
 
 def get_product_price(price, multi_pack_amount=None):
     '''
@@ -147,7 +155,7 @@ def get_product_price(price, multi_pack_amount=None):
     '''
     if multi_pack_amount:
         if price % multi_pack_amount:
-            price = (math.floor(price / multi_pack_amount) + 1)
+            price = math.ceil(price / multi_pack_amount)
         else:
             price /= multi_pack_amount
 

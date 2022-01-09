@@ -1,0 +1,36 @@
+[
+  {
+    "Handle": 1089410531372,
+    "Title": "Vinegar, White Wine",
+    "Body (HTML)": "<h4>From Hummingbird Wholesale</h4><p>Made from white wine, our Organic White Wine Vinegar is a consistent acidity of 6%. The vinegar can be sharp or mellow, depending on the original substrate. It is essential for certain light vinaigrettes, beurre blanc, and marinades for light meats and seafood.</p><p>Our Organic Vinegars are produced only with first quality grapes, that have been cultivated under the guidelines of organic agricultural methods. These methods protect the environment by reducing the use of fertilizers, and totally avoiding pesticides and synthetic herbicides.</p><p>The entire production is processed in accordance with the International Standards set forth by the renowned certifier, ECOCERT Italy. ECOCERT Italy assists the producer in every phase of production, from selecting and processing the raw material, to control of Organic documentation, product labeling, packaging, and storage.</p><table style=\"width: 333px;\"><tbody><tr style=\"height: 36px;\"><td style=\"width: 169px; height: 36px;\"><p>Origin</p></td><td style=\"width: 707px; height: 36px;\"><p>Italy</p></td></tr><tr style=\"height: 36px;\"><td style=\"width: 169px; height: 36px;\"><p>Storage Info</p></td><td style=\"width: 707px; height: 36px;\"><p>Store in a cool, dark place in an airtight container</p></td></tr><tr style=\"height: 36px;\"><td style=\"width: 169px; height: 36px;\"><p>Shelf Life</p></td><td style=\"width: 707px; height: 36px;\"><p>Best used within 3 years of production date</p></td></tr><tr style=\"height: 36px;\"><td style=\"width: 169px; height: 36px;\"><p>Ingredients</p></td><td style=\"width: 707px; height: 36px;\"><p>Organic White Wine Vinegar</p></td></tr><tr style=\"height: 36px;\"><td style=\"width: 169px; height: 36px;\"><p>Allergens</p></td><td style=\"width: 707px; height: 36px;\"><p>None</p></td></tr></tbody></table>",
+    "Vendor": "Hummingbird Wholesale",
+    "Tags": "condiments",
+    "Published": true,
+    "Option1 Name": "Size",
+    "Option1 Value": "1 Gallon Glass Jug",
+    "Variant SKU": "CO145",
+    "Variant Grams": 0,
+    "Variant Inventory Policy": "continue",
+    "Variant Fulfillment Service": "manual",
+    "Variant Price": 25.25,
+    "Variant Inventory Tracker": null,
+    "Image Src": "https://cdn.shopify.com/s/files/1/0014/7125/0476/products/CO145---White-Wine-Vinegar-1gal.jpg?v=1600722297",
+    "Variant Image": "https://cdn.shopify.com/s/files/1/0014/7125/0476/products/CO145---White-Wine-Vinegar-1gal.jpg?v=1600722297",
+    "Image Alt Text": "Vinegar, White Wine",
+    "Status": "draft"
+  },
+  {
+    "Handle": 1089410531372,
+    "Published": true,
+    "Option1 Name": "Size",
+    "Option1 Value": "2.5 Gallon Easy Pour Jug",
+    "Variant SKU": "CO150",
+    "Variant Grams": 0,
+    "Variant Inventory Policy": "continue",
+    "Variant Fulfillment Service": "manual",
+    "Variant Price": 56.0,
+    "Variant Inventory Tracker": null,
+    "Variant Image": "https://cdn.shopify.com/s/files/1/0014/7125/0476/products/z-m171-2-5-gal-easy-pour-jug_d5f3edb6-ef3e-456e-b814-6698cded079e.png?v=1600722297",
+    "Status": "draft"
+  }
+]

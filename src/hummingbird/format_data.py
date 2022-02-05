@@ -14,7 +14,8 @@ from src.constants import (
     SHOPIFY_IS_ONLINE_STORE,
     SHOPIFY_VARIANT_FULFILLMENT_SERVICE_MANUAL,
     SHOPIFY_VARIANT_INVENTORY_POLICY_CONTINUE,
-    SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY
+    SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY,
+    SHOPIFY_CUSTOM_TYPE_INDIVIDUAL_SIZE_PRODUCT
 )
 
 # pylint: disable=consider-using-f-string
@@ -33,7 +34,14 @@ def format_products(product_data):
         multi_pack_amount = None
 
         new_product['Handle'] = product['id']
-        new_product['Title'] = product['title']
+
+        registered_trademark = ['<sup>&reg;</sup>', '<sup>®</sup>']
+        product_title = product['title']
+
+        for malformed_trademark in registered_trademark:
+            product_title = re.sub(malformed_trademark, '®', product_title)
+
+        new_product['Title'] = product_title
 
         description_html = product['description']
         description_soup = BeautifulSoup(description_html, 'html.parser')
@@ -75,7 +83,10 @@ def format_products(product_data):
         new_product['Variant Fulfillment Service'] = 'manual'
         # pylint: disable-next=line-too-long
         new_product['Variant Price'] = get_product_price(primary_variant['price'], multi_pack_amount)
-        new_product['Variant Inventory Tracker'] = 'shopify' if multi_pack else None
+        new_product['Variant Inventory Tracker'] = \
+            SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY if multi_pack else None
+        new_product['Custom Product Type'] = \
+            SHOPIFY_CUSTOM_TYPE_INDIVIDUAL_SIZE_PRODUCT if multi_pack else None
 
         new_product['Image Src'] = format_image_src(product['featured_image'])
 

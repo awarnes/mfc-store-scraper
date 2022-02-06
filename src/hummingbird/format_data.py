@@ -73,6 +73,7 @@ def format_products(product_data):
             new_product['Option1 Value'] = MULTI_PACK_CONVERTER[primary_variant['option1']]
             multi_pack = True
             multi_pack_amount = get_multi_pack_amount(primary_variant)
+            new_product['Tags'] = new_product['Tags'] + ',multipack'
         else:
             new_product['Option1 Value'] = primary_variant['option1']
 
@@ -83,8 +84,7 @@ def format_products(product_data):
         new_product['Variant Fulfillment Service'] = 'manual'
         # pylint: disable-next=line-too-long
         new_product['Variant Price'] = get_product_price(primary_variant['price'], multi_pack_amount)
-        new_product['Variant Inventory Tracker'] = \
-            SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY if multi_pack else None
+        new_product['Variant Inventory Tracker'] = SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY
         new_product['Custom Product Type'] = \
             SHOPIFY_CUSTOM_TYPE_INDIVIDUAL_SIZE_PRODUCT if multi_pack else None
 
@@ -114,6 +114,7 @@ def format_products(product_data):
                 new_variant['Option1 Value'] = MULTI_PACK_CONVERTER[variant['option1']]
                 multi_pack = True
                 multi_pack_amount = get_multi_pack_amount(variant)
+                new_variant['Tags'] = new_variant['Tags'] + ',multipack'
             else:
                 new_variant['Option1 Value'] = variant['option1']
 
@@ -124,8 +125,7 @@ def format_products(product_data):
             new_variant['Variant Fulfillment Service'] = SHOPIFY_VARIANT_FULFILLMENT_SERVICE_MANUAL
 
             new_variant['Variant Price'] = get_product_price(variant['price'], multi_pack_amount)
-            new_variant['Variant Inventory Tracker'] = \
-                SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY if multi_pack else None
+            new_variant['Variant Inventory Tracker'] = SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY
 
             if variant['featured_image']:
                 new_variant['Variant Image'] = variant['featured_image']['src']

@@ -67,3 +67,12 @@ SHOPIFY_CSV_FIELD_NAMES = {
     "standard_product_type": "Standard Product Type",
     "custom_product_type": "Custom Product Type"
 }
+
+SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY = {
+    "handle": "Handle",
+    "title": "Title",
+    "tags": "Tags",
+    "option1_name": "Option1 Name",
+    "option1_value": "Option1 Value",
+    "variant_price": "Variant Price"
+}

@@ -2,7 +2,7 @@
 Formatting functions for Hummingbird Wholesale data retrieval
 '''
 import math
-import re
+import re,json
 
 from bs4 import BeautifulSoup
 
@@ -43,37 +43,43 @@ def format_products(product_data):
 
         new_product['Title'] = product_title
 
-        description_html = product['description']
-        description_soup = BeautifulSoup(description_html, 'html.parser')
-        new_product['Body (HTML)'] = ''.join(
-            ['<h4>From Hummingbird Wholesale</h4>'] +
-            [
-                re.sub('\n', '', str(tag))
-                for tag in description_soup.find_all(description_filter_text)
-            ]
-        )
+        try:
+            description_html = product['description']
+            description_soup = BeautifulSoup(description_html, 'html.parser')
+            new_product['Body (HTML)'] = ''.join(
+                ['<h4>From Hummingbird Wholesale</h4>'] +
+                [
+                    re.sub('\n', '', str(tag))
+                    for tag in description_soup.find_all(description_filter_text)
+                ]
+            )
+        except KeyError:
+            pass
 
         new_product['Vendor'] = HUMMINGBIRD_WHOLESALE_VENDOR
         new_product['Tags'] = ','.join([tag.lower() for tag in product['tags']])
         new_product['Published'] = SHOPIFY_IS_ONLINE_STORE
 
-        if len(product['options']) > 1:
-            print(
-                'NEW OPTION(S) REQUIRED: {0} on {1}//{2}'.format(
-                    product['options'], new_product['Handle'], new_product['Title']
+        try:
+            if len(product['options']) > 1:
+                print(
+                    'NEW OPTION(S) REQUIRED: {0} on {1}//{2}'.format(
+                        product['options'], new_product['Handle'], new_product['Title']
+                    )
                 )
-            )
+            
+            new_product['Option1 Name'] = product['options'][0].capitalize()
+        except KeyError:
+            new_product['Option1 Name'] = 'Size'
 
         primary_variant = product['variants'][0]
-
-        new_product['Option1 Name'] = product['options'][0].capitalize()
 
         # Check for a multi-pack product
         if is_multi_pack(primary_variant):
             new_product['Option1 Value'] = MULTI_PACK_CONVERTER[primary_variant['option1']]
             multi_pack = True
             multi_pack_amount = get_multi_pack_amount(primary_variant)
-            new_product['Tags'] = new_product['Tags'] + ',multipack'
+            new_product['Tags'] = new_product['Tags'] + ', multipack'
         else:
             new_product['Option1 Value'] = primary_variant['option1']
 
@@ -88,7 +94,7 @@ def format_products(product_data):
         new_product['Custom Product Type'] = \
             SHOPIFY_CUSTOM_TYPE_INDIVIDUAL_SIZE_PRODUCT if multi_pack else None
 
-        new_product['Image Src'] = format_image_src(product['featured_image'])
+        new_product['Image Src'] = format_image_src(product['images'][0])
 
         new_product['Variant Image'] = new_product['Image Src']
 
@@ -107,6 +113,7 @@ def format_products(product_data):
             new_variant['Handle'] = new_product['Handle']
 
             new_variant['Published'] = SHOPIFY_IS_ONLINE_STORE
+
             new_variant['Option1 Name'] = new_product['Option1 Name']
 
             # Check for a multi-pack product
@@ -114,7 +121,8 @@ def format_products(product_data):
                 new_variant['Option1 Value'] = MULTI_PACK_CONVERTER[variant['option1']]
                 multi_pack = True
                 multi_pack_amount = get_multi_pack_amount(variant)
-                new_variant['Tags'] = new_variant['Tags'] + ',multipack'
+                if 'multipack' not in new_product['Tags']:
+                    new_product['Tags'] = new_product['Tags'] + ', multipack'
             else:
                 new_variant['Option1 Value'] = variant['option1']
 

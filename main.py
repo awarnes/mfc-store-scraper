@@ -5,8 +5,11 @@ Primary entry point for store scraping code.
 import csv
 import json
 import os
+from typing import Dict
 
-from src.constants import SHOPIFY_CSV_FIELD_NAMES
+from src.constants import (
+    SHOPIFY_CSV_FIELD_NAMES,
+    SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY)
 from src.hummingbird.constants import (
     HUMMINGBIRD_ALL_PRODUCTS_URL,
     HUMMINGBIRD_DATA_FILE,
@@ -40,7 +43,7 @@ def collect_data(save_to_file=True):
     return raw_data, missing_products
 
 
-def format_data(raw_data, from_file_path=None):
+def format_data(raw_data, fieldnames: Dict, from_file_path=None):
     '''
     Formats collected data and saves as CSV for Shopify import.
     Optionally, can import data from file instead of object
@@ -51,16 +54,25 @@ def format_data(raw_data, from_file_path=None):
             print(f'Loading data from file {from_file_path}...')
             raw_data = json.load(data_file)
 
-    products_to_write = format_products(raw_data)
+    product_data = format_products(raw_data)
+
+    # Write only the values in the passed fieldnames dict.
+    products_to_write = []
+
+    for product in product_data:
+        products_to_write.append({key: product.get(key, '') for key in fieldnames.values()})
 
     with open(os.path.join(LOCAL_DATA_PATH, HUMMINGBIRD_CSV_FILE), 'w', encoding='utf8') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=SHOPIFY_CSV_FIELD_NAMES.values())
+
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames.values())
 
         writer.writeheader()
 
         writer.writerows(products_to_write)
 
 if __name__ == '__main__':
-    product_data, _ = collect_data(save_to_file=True)
+    raw_data, _ = collect_data(save_to_file=True)
 
-    format_data(product_data)
+    # Use SHOPIFY_CSV_FIELD_NAMES to add/update all fields
+    # Use SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY for updating only prices
+    format_data(raw_data, SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY)

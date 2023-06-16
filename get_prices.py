@@ -1,19 +1,18 @@
-from src.hummingbird.format_data import is_multi_pack, get_multi_pack_amount, get_product_price
-import json, csv, math
+"""
+This file gets the prices from the new Hummingbird Wholesale forms
+and writes them to a CSV. This can then be used to manually update prices in Shopify
+Add the output data to this sheet with the date for archiving:
+https://docs.google.com/spreadsheets/d/1yt8LAMR7M6Hc00Zvtrptw867q7Dsp9LSVdVxcQMvjmM/edit#gid=0
 
-# with open('./outputs/hummingbird_products.json') as file:
-#     data = json.load(file)
+You'll need to login to the Hummingbird wholesale website and get the _secure_session_id token
+from the cookies and update it on line 119 of the src/hummingbird/get_data.py file.
+"""
 
-#     for product in data:
-#         if product['id'] == 4383082479664:
-#             print(json.dumps(product))
-
+import csv, math
 
 from src.hummingbird.get_data import all_wof_collection_data
 
-data = []
-with open('./outputs/archive/hummingbird_products_20230323.json', 'r') as jsonfile:
-    data = json.load(jsonfile)
+data = all_wof_collection_data()
 
 csv_data = []
 for product in data:
@@ -35,5 +34,6 @@ for product in data:
 
 with open('data.csv', 'w') as f:
     writer = csv.writer(f)
+    writer.writerow(['Product Name', 'Variant', 'Sell Price', 'Purchase Price'])
     for d in csv_data:
         writer.writerow(d)

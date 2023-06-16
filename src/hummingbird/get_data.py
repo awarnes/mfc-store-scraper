@@ -2,7 +2,7 @@
 Getting data from the Hummingbird Wholesale site
 """
 
-import re
+import re, json
 
 from bs4 import BeautifulSoup
 import requests
@@ -115,7 +115,8 @@ def all_wof_collection_data():
     page = 1
     product_data = []
     cookies = {
-        '_secure_session_id': '5f3ef99b11a163082cd9453d2ff012b7',
+        # UPDATE ME FROM HUMMINGBIRD WEBSITE
+        '_secure_session_id': '7e48974427def07a40f072c575d785b1',
     }
 
     params = {

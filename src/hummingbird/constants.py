@@ -6,6 +6,7 @@ HUMMINGBIRD_DATA_FILE: str = 'hummingbird_products.json'
 HUMMINGBIRD_CSV_FILE: str = 'hummingbird_products.csv'
 HUMMINGBIRD_WHOLESALE_BASE_URL: str = 'https://hummingbirdwholesale.com'
 HUMMINGBIRD_ALL_PRODUCTS_URL: str = '/collections/all'
+HUMMINGBIRD_ALL_PRODUCT_QUERY: str = '?view=wof_collection_data&sort_by=manual&page='
 
 HUMMINGBIRD_WHOLESALE_VENDOR = 'Hummingbird Wholesale'
 

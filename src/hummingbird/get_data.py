@@ -9,7 +9,11 @@ import requests
 
 from src.constants import PRODUCT_PAGE_SEARCH_SIZE
 from src.utils import paginate
-from src.hummingbird.constants import HUMMINGBIRD_WHOLESALE_BASE_URL
+from src.hummingbird.constants import (
+    HUMMINGBIRD_WHOLESALE_BASE_URL,
+    HUMMINGBIRD_ALL_PRODUCTS_URL,
+    HUMMINGBIRD_ALL_PRODUCT_QUERY
+)
 
 class HummingbirdException(Exception):
     '''Exception for Hummingbird calls'''
@@ -100,3 +104,43 @@ def all_product_data(ids_to_search):
         missing_products = [re.sub('id:', '', product_id) for product_id in missing_products]
 
     return product_data, missing_products
+
+def all_wof_collection_data():
+    """
+    Gets and returns all data from the wof_collection_data
+    search on Hummingbird Wholesale
+    """
+
+    total_pages = float('inf')
+    page = 1
+    product_data = []
+    cookies = {
+        '_secure_session_id': '5f3ef99b11a163082cd9453d2ff012b7',
+    }
+
+    params = {
+        'view': 'wof_collection_data',
+        'sort_by': 'manual',
+    }
+
+    while page <= total_pages:
+        params['page'] = page
+
+        print(f'Getting data for page {page}...')
+
+        response = requests.get(
+            f'{HUMMINGBIRD_WHOLESALE_BASE_URL}{HUMMINGBIRD_ALL_PRODUCTS_URL}',
+            params=params,
+            # headers=headers,
+            cookies=cookies
+        )
+
+        if response.ok:
+            response_json = response.json()
+            total_pages = int(response_json['totalPages'])
+            product_data += response_json['productItems']
+            page += 1
+        else:
+            print(f'Error on page: {page}...')
+
+    return product_data

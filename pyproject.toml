@@ -1,0 +1,13 @@
+[project]
+name = "mfc-store-scraper"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "algoliasearch>=4.35.0",
+    "beautifulsoup4>=4.14.3",
+    "pylint>=4.0.4",
+    "requests>=2.32.5",
+    "requests-unixsocket>=0.4.1",
+]

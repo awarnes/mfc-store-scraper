@@ -9,6 +9,7 @@ dependencies = [
     "beautifulsoup4>=4.14.3",
     "psycopg2>=2.9.11",
     "pylint>=4.0.4",
+    "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "requests-unixsocket>=0.4.1",
 ]

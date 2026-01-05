@@ -1,4 +1,5 @@
 import json
+from typing import Dict, List
 
 import requests
 
@@ -31,7 +32,7 @@ class Azure:
             },
         )
 
-        return resp.json()["hits"]
+        return resp.json().get("hits")
 
     def get_products_for_category(self, category_id, page=0):
         resp = requests.post(
@@ -51,21 +52,75 @@ class Azure:
             num_pages = 100000
 
             while page < num_pages:
-                resp = self.get_products_for_category(category["id"], page)
-                if resp["nbHits"] >= 2000:
+                resp = self.get_products_for_category(category.get("id"), page)
+                if resp.get("nbHits") >= 2000:
                     print(f"More than 2k products in category: {category['id']}")
-                hits += resp["hits"]
-                num_pages = resp["nbPages"]
+                hits += resp.get("hits")
+                num_pages = resp.get("nbPages")
                 page += 1
 
         return hits
 
+    def get_local_products(self):
+        with open("../../outputs/data.json", "r") as f:
+            return json.loads(f.read())
 
-if __name__ == "__main__":
-    azure = Azure()
+    def format_products(self, input) -> tuple[List[Dict], List[Dict], List[Dict]]:
+        products = []
+        packaging = []
+        prices = []
 
-    all_products = azure.get_all_products()
+        for product in input:
+            products.append(
+                {
+                    "id": product.get("id"),
+                    "name": product.get("name"),
+                    "short_description": product.get("shortDescription"),
+                    "description": product.get("description"),
+                    "slug": product.get("slug"),
+                    "storage_climate": product.get("storageClimate"),
+                    "unshippable_regions": json.dumps(
+                        product.get("unshippableRegions")
+                    ),
+                    "brand": json.dumps(product.get("brand")),
+                    "substitutions": json.dumps(product.get("substitutions")),
+                }
+            )
 
-    print(len(all_products))
-    with open("data.json", "w") as f:
-        f.write(json.dumps(all_products))
+            for pack in product.get("packaging"):
+                packaging.append(
+                    {
+                        "products_id": product.get("id"),
+                        "code": pack.get("code"),
+                        "size": pack.get("size"),
+                        "weight": json.dumps(pack.get("weight")),
+                        "stock": pack.get("stock"),
+                        "images": json.dumps(pack.get("images")),
+                        "rewards_enabled": pack.get("rewardsEnabled"),
+                        "freight_handling_required": pack.get(
+                            "freightHandlingRequired"
+                        ),
+                        "tags": json.dumps(pack.get("tags")),
+                        "primary_category": pack.get("primary-category"),
+                        "favorites": pack.get("favorites"),
+                        "next_purchase_arrival": pack.get("next-purchase-arrival"),
+                    }
+                )
+
+                prices.append(
+                    {
+                        "packaging_code": pack.get("code"),
+                        "retail_dollars": pack.get("price")
+                        .get("retail", {})
+                        .get("dollars"),
+                        "retail_unit": pack.get("price").get("retail", {}).get("unit"),
+                        "wholesale_dollars": pack.get("price")
+                        .get("wholesale", {})
+                        .get("dollars"),
+                        "wholesale_unit": pack.get("price")
+                        .get("wholesale", {})
+                        .get("unit"),
+                    }
+                )
+
+        return (products, packaging, prices)

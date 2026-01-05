@@ -1,0 +1,20 @@
+services:
+  azure-db:
+    image: postgres:18-alpine
+    container_name: azure-db
+    volumes:
+      - azure:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./.env.local
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d azure"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+volumes:
+  azure:

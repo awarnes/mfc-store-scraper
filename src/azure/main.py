@@ -1,20 +1,26 @@
-from postgres import Database
 from psycopg2 import sql
 
-from azure import Azure
+from src.azure.azure import Azure
+from src.azure.logger import logger
+from src.azure.postgres import Database
 
 if __name__ == "__main__":
+    logger.info("Starting Azure product scraper")
+
     azure = Azure()
 
-    print("Retrieving all products...")
+    logger.info("Retrieving all products...")
     all_products = azure.get_all_products()
+    logger.debug(f"Retrieved {len(all_products)} products")
 
-    print("Formatting products...")
+    logger.info("Formatting products...")
     (formatted_products, formatted_packaging, formatted_prices) = azure.format_products(
         all_products
     )
+    logger.debug(f"Formatted {len(formatted_products)} products, {len(formatted_packaging)} packaging, {len(formatted_prices)} prices")
 
     database = Database()
+    logger.info("Connected to database")
 
     product_query = sql.SQL(
         """
@@ -33,8 +39,9 @@ if __name__ == "__main__":
     """
     )
 
-    print("Inserting products...")
+    logger.info("Inserting products...")
     database.batch_execute(product_query, formatted_products)
+    logger.info(f"Inserted {len(formatted_products)} products")
 
     packaging_query = sql.SQL(
         """
@@ -55,8 +62,9 @@ if __name__ == "__main__":
     """
     )
 
-    print("Inserting packaging...")
+    logger.info("Inserting packaging...")
     database.batch_execute(packaging_query, formatted_packaging)
+    logger.info(f"Inserted {len(formatted_packaging)} packaging records")
 
     # TODO: Only insert prices for existing packages
     prices_query = sql.SQL(
@@ -66,5 +74,8 @@ if __name__ == "__main__":
     """
     )
 
-    print("Inserting prices...")
+    logger.info("Inserting prices...")
     database.batch_execute(prices_query, formatted_prices)
+    logger.info(f"Inserted {len(formatted_prices)} price records")
+
+    logger.success("Azure product scraper completed successfully")

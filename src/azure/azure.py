@@ -3,16 +3,16 @@ from typing import Dict, List
 
 import requests
 
-from constants import API_KEY, APP_ID
+from src.azure.settings import settings
 
 
 class Azure:
     app_id = ""
     api_key = ""
 
-    def __init__(self, app_id=APP_ID, api_key=API_KEY):
-        self.app_id = app_id
-        self.api_key = api_key
+    def __init__(self, app_id=None, api_key=None):
+        self.app_id = app_id or settings.app_id
+        self.api_key = api_key or settings.api_key
 
     def get_url(self, search_index):
         return f"https://{self.app_id}-dsn.algolia.net/1/indexes/{search_index}/query?x-algolia-application-id={self.app_id}&x-algolia-api-key={self.api_key}"

@@ -2,3 +2,8 @@
 !.gitkeep
 .vscode
 __pycache__
+
+# Environment files
+.env
+.env.*
+!.env.example

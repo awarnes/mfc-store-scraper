@@ -4,10 +4,11 @@ services:
     container_name: azure-db
     volumes:
       - azure:/var/lib/postgresql/data/
+      - ./base_schema.sql:/docker-entrypoint-initdb.d/01-base_schema.sql:ro
     ports:
-      - "5432:5432"
+      - "5999:5432"
     env_file:
-      - ./.env.local
+      - ${ENV_FILE:-.env.local}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U root -d azure"]

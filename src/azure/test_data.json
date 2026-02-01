@@ -1,0 +1,54 @@
+[
+  {
+    "id": 26408,
+    "name": "Pet Care, Shampoo Bar, Flea and Tick, All Natural",
+    "slug": "pet-care-shampoo-bar-flea-and-tick-all-natural",
+    "treatAsActive": false,
+    "storageClimate": "dry",
+    "unshippableRegions": [],
+    "packaging": [
+      {
+        "code": "GP1008",
+        "size": "4.5 oz",
+        "volume": 0.004701967592592593,
+        "weight": { "net": 0.25, "shipping": 0.25 },
+        "stock": 109,
+        "images": [
+          "https://media.azurestandard.com/files/786b4bc0-1d69-4831-b23d-548a9a7bce48",
+          "https://media.azurestandard.com/files/9b63f259-cf09-4dc2-a7b3-e447c7c3b72c",
+          "https://media.azurestandard.com/files/4d094630-cd48-43c2-8ee7-c3732333c8b9",
+          "https://media.azurestandard.com/files/4fe35423-6bb7-4841-8494-6449a1b0345e"
+        ],
+        "rewardsEnabled": true,
+        "freightHandlingRequired": false,
+        "price": {
+          "retail": {
+            "per-pound": false,
+            "dollars": 15.0,
+            "unit": "ounce",
+            "dollars-per-unit": 3.333333333333334
+          },
+          "wholesale": {
+            "per-pound": false,
+            "dollars": 12.43,
+            "unit": "ounce",
+            "dollars-per-unit": 2.762222222222222
+          }
+        },
+        "tags": [],
+        "primary-category": 34707,
+        "favorites": 346,
+        "next-purchase-arrival": "2025-12-17T00:00:00-08:00"
+      }
+    ],
+    "brand": { "name": "Granny Smith" },
+    "shortDescription": "Our Natural flea and tick shampoo bar is great for pets, but also for children with lice! Rosemary, Lemongrass & local Oregon peppermint essential oils are effective insect repellents that work great when applied regularly. What a wonderful alternative to chemical repellents!",
+    "description": "<p>\r\n\tOur all Natural Flea &amp; Tick Shampoo Bar is made with the following great ingredients!</p>\r\n<p>\r\n\tRosemary, lemongrass, &amp; local oregon peppermint essential oils are known insect repellents that work great when applied regularly.</p>\r\n<p>\r\n\tWhat a wonderful alternative to chemical repellents!</p>\r\n<p>\r\n\t<em>Neem Oil</em> - is a natural insecticide</p>\r\n<p>\r\n\t<em>Coconut &amp; Castor Oil </em>- offer a rich lather, but allows your pet&#39;s skin to retain all the natural oils it requires, leaving them feeling clean and really soft!</p>\r\n<p>\r\n\tAbout Granny Smith</p>\r\n<p>\r\n\tWhat happens when you take a suburban couple and transplant them onto acreage in a small Oregon town? For Brian and Janet Smith, it was the start of a simpler and healthier way of life. They gleaned so much knowledge from their friends and neighbors that it was only a matter of time before Granny Smith Natural Products was born.</p>\r\n<p>\r\n\tTogether with their five daughters, the Smiths learned important tasks such as raising hens, selling eggs, gardening, preserving foods, cheese-making, tending bees, and more. They took their knowledge and products to local fairs and stores and the rest is history.</p>\r\n<p>\r\n\tGranny Smith products are made with only nourishing and soothing ingredients such as shea butter, coconut oil, beeswax, and vitamin E oil. They guarantee that you will be satisfied with their natural soaps and skin care products.</p>",
+    "substitutions": {
+      "staffPicks": [26408],
+      "byCategory": [18296, 31672, 37814, 36794, 8591]
+    },
+    "favorites": 344,
+    "objectID": "26408"
+  }
+]

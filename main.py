@@ -1,78 +1,87 @@
-'''
-Primary entry point for store scraping code.
-'''
+"""Main CLI entry point"""
 
-import csv
-import json
-import os
-from typing import Dict
+from psycopg2 import sql
 
-from src.constants import (
-    SHOPIFY_CSV_FIELD_NAMES,
-    SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY)
-from src.hummingbird.constants import (
-    HUMMINGBIRD_ALL_PRODUCTS_URL,
-    HUMMINGBIRD_DATA_FILE,
-    HUMMINGBIRD_CSV_FILE)
-from src.hummingbird.get_data import all_product_ids, all_product_data
-from src.hummingbird.format_data import format_products
+from src.azure.azure import Azure
+from src.lib.logger import logger
+from src.db.postgres import Database
 
-LOCAL_DATA_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'outputs'
-)
+if __name__ == "__main__":
+    logger.info("Starting Azure product scraper")
 
-def collect_data(save_to_file=True):
-    '''
-    Collect data from site, write to file if save_to_file == True
-    '''
-    raw_data, missing_products = all_product_data(all_product_ids(HUMMINGBIRD_ALL_PRODUCTS_URL))
+    azure = Azure()
 
-    if missing_products:
-        print('~~~Some Product IDs are Missing From Product Data!!~~~')
-        print(missing_products)
+    logger.info("Retrieving all products...")
+    all_products = azure.get_all_products()
+    logger.debug(f"Retrieved {len(all_products)} products")
 
-    if save_to_file:
-        with open(
-            os.path.join(LOCAL_DATA_PATH, HUMMINGBIRD_DATA_FILE),
-            'w',
-            encoding='utf8'
-        ) as jsonfile:
-            json.dump(raw_data, jsonfile)
+    logger.info("Formatting products...")
+    (formatted_products, formatted_packaging, formatted_prices) = azure.format_products(
+        all_products
+    )
+    logger.debug(f"Formatted {len(formatted_products)} products, \
+        {len(formatted_packaging)} packaging, {len(formatted_prices)} prices")
 
-    return raw_data, missing_products
+    database = Database()
+    logger.info("Connected to database")
 
+    # pylint: disable=line-too-long
+    product_query = sql.SQL(
 
-def format_data(raw_data, fieldnames: Dict, from_file_path=None):
-    '''
-    Formats collected data and saves as CSV for Shopify import.
-    Optionally, can import data from file instead of object
-    '''
-    if from_file_path:
-        raw_data = []
-        with open(os.path.join(LOCAL_DATA_PATH, from_file_path), encoding='utf8') as data_file:
-            print(f'Loading data from file {from_file_path}...')
-            raw_data = json.load(data_file)
+        """
+        INSERT INTO azure.products (id, name, short_description, description, slug, storage_climate, unshippable_regions, brand, substitutions)
+        VALUES (%(id)s,%(name)s,%(short_description)s,%(description)s,%(slug)s,%(storage_climate)s,%(unshippable_regions)s,%(brand)s,%(substitutions)s)
+        ON CONFLICT(id)
+        DO UPDATE SET
+            name = EXCLUDED.name,
+            short_description = EXCLUDED.short_description,
+            description = EXCLUDED.description,
+            slug = EXCLUDED.slug,
+            storage_climate = EXCLUDED.storage_climate,
+            unshippable_regions = EXCLUDED.unshippable_regions,
+            brand = EXCLUDED.brand,
+            substitutions = EXCLUDED.substitutions;
+    """
+    )
 
-    product_data = format_products(raw_data)
+    logger.info("Inserting products...")
+    database.batch_execute(product_query, formatted_products)
+    logger.info(f"Inserted {len(formatted_products)} products")
 
-    # Write only the values in the passed fieldnames dict.
-    products_to_write = []
+    packaging_query = sql.SQL(
+        """
+        INSERT INTO azure.packaging (products_id, code, size, weight, stock, images, rewards_enabled, freight_handling_required, tags, primary_category,favorites,next_purchase_arrival)
+        VALUES (%(products_id)s,%(code)s,%(size)s,%(weight)s,%(stock)s,%(images)s,%(rewards_enabled)s,%(freight_handling_required)s,%(tags)s,%(primary_category)s,%(favorites)s,%(next_purchase_arrival)s)
+        ON CONFLICT(products_id, code)
+        DO UPDATE SET
+            size = EXCLUDED.size,
+            weight = EXCLUDED.weight,
+            stock = EXCLUDED.stock,
+            images = EXCLUDED.images,
+            rewards_enabled = EXCLUDED.rewards_enabled,
+            freight_handling_required = EXCLUDED.freight_handling_required,
+            tags = EXCLUDED.tags,
+            primary_category = EXCLUDED.primary_category,
+            favorites = EXCLUDED.favorites,
+            next_purchase_arrival = EXCLUDED.next_purchase_arrival;
+    """
+    )
 
-    for product in product_data:
-        products_to_write.append({key: product.get(key, '') for key in fieldnames.values()})
+    logger.info("Inserting packaging...")
+    database.batch_execute(packaging_query, formatted_packaging)
+    logger.info(f"Inserted {len(formatted_packaging)} packaging records")
 
-    with open(os.path.join(LOCAL_DATA_PATH, HUMMINGBIRD_CSV_FILE), 'w', encoding='utf8') as csvfile:
+    # pylint: disable=fixme
+    # TODO: Only insert prices for existing packages
+    prices_query = sql.SQL(
+        """
+        INSERT INTO azure.prices (packaging_code, retail_dollars, retail_unit, wholesale_dollars, wholesale_unit)
+        VALUES (%(packaging_code)s,%(retail_dollars)s,%(retail_unit)s,%(wholesale_dollars)s,%(wholesale_unit)s);
+    """
+    )
 
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames.values())
+    logger.info("Inserting prices...")
+    database.batch_execute(prices_query, formatted_prices)
+    logger.info(f"Inserted {len(formatted_prices)} price records")
 
-        writer.writeheader()
-
-        writer.writerows(products_to_write)
-
-if __name__ == '__main__':
-    raw_data, _ = collect_data(save_to_file=True)
-
-    # Use SHOPIFY_CSV_FIELD_NAMES to add/update all fields
-    # Use SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY for updating only prices
-    format_data(raw_data, SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY)
+    logger.success("Azure product scraper completed successfully")

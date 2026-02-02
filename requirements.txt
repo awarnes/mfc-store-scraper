@@ -1,4 +1,0 @@
-beautifulsoup4==4.10.0
-pylint==2.12.2
-requests==2.22.0
-requests-unixsocket==0.2.0

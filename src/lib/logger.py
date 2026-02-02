@@ -3,7 +3,7 @@ import sys
 
 from loguru import logger
 
-from src.azure.settings import settings
+from src.settings import settings
 
 # Remove default handler
 logger.remove()
@@ -11,6 +11,7 @@ logger.remove()
 # Add custom handler with format that includes module and line numbers
 logger.add(
     sys.stderr,
+    # pylint: disable=line-too-long
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
     level=settings.log_level,
     colorize=True,

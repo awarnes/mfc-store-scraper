@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup
 from src.utils import format_image_src, paginate, description_filter_text
 
 # pylint: disable=line-too-long,missing-function-docstring,missing-class-docstring
-
 LOCAL_TEST_DATA_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     '..',

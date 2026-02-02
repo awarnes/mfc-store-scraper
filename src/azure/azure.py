@@ -1,12 +1,14 @@
+"""Wrapper class for scraping data from the Azure website"""
+
 import json
 from typing import Dict, List
 
 import requests
 
-from src.azure.settings import settings
-
+from src.settings import settings
 
 class Azure:
+    """Wrapper class for scraping data from Azure website"""
     app_id = ""
     api_key = ""
 
@@ -15,37 +17,46 @@ class Azure:
         self.api_key = api_key or settings.api_key
 
     def get_url(self, search_index):
+        """Get the URL for Azure API access"""
+        # pylint: disable=line-too-long
         return f"https://{self.app_id}-dsn.algolia.net/1/indexes/{search_index}/query?x-algolia-application-id={self.app_id}&x-algolia-api-key={self.api_key}"
 
     def headers(self):
+        """Common headers for requests"""
         return {
             "content-type": "application/x-www-form-urlencoded",
             "accept": "application/json",
         }
 
     def get_d1_categories(self):
+        """Get depth=1 categories for Azure"""
         resp = requests.post(
             self.get_url("categories"),
             headers=self.headers(),
             json={
                 "params": "query=&attributesToHighlight=&filters=depth=1&hitsPerPage=5000"
             },
+            timeout=5
         )
 
         return resp.json().get("hits")
 
     def get_products_for_category(self, category_id, page=0):
+        """Get all products for a given category"""
+        # pylint: disable=line-too-long
         resp = requests.post(
             self.get_url("products"),
             headers=self.headers(),
             json={
                 "params": f"query=&filters=packaging.stock%20%3E%200&attributesToHighlight=&attributesToRetrieve=id%2Cbrand.name%2Cname%2Csubstitutions%2Cfavorites%2CstorageClimate%2Cslug%2CmaxStorageDays%2CtreatAsActive%2CunshippableRegions%2Cpackaging.code%2Cpackaging.price%2Cpackaging.weight%2Cpackaging.volume%2Cpackaging.tags%2Cpackaging.images%2Cpackaging.size%2Cpackaging.stock%2Cpackaging.next-purchase-arrival%2Cpackaging.favorites%2Cpackaging.bargain-bin-notes%2Cpackaging.rewardsEnabled%2Cpackaging.freightHandlingRequired%2Cpackaging.vendorShortedLastPurchase%2Cpackaging.primary-category%2Cdescription%2CshortDescription&queryType=prefixNone&facetFilters=%5B%5B%5D%2C%22category-ids%3A{category_id}%22%2C%5B%5D%5D&optionalFilters=%5B%22isPromoted%3Atrue%22%5D&hitsPerPage=5000&page={page}"
             },
+            timeout=5
         )
 
         return resp.json()
 
     def get_all_products(self):
+        """Get all Azure products"""
         hits = []
         for category in self.get_d1_categories():
             page = 0
@@ -62,15 +73,17 @@ class Azure:
         return hits
 
     def get_local_products(self):
-        with open("../../outputs/data.json", "r") as f:
+        """Get products from a local file"""
+        with open("../../outputs/data.json", "r", encoding='utf8') as f:
             return json.loads(f.read())
 
-    def format_products(self, input) -> tuple[List[Dict], List[Dict], List[Dict]]:
+    def format_products(self, unformatted_products) -> tuple[List[Dict], List[Dict], List[Dict]]:
+        """Format Azure products for insertion into database"""
         products = []
         packaging = []
         prices = []
 
-        for product in input:
+        for product in unformatted_products:
             products.append(
                 {
                     "id": product.get("id"),

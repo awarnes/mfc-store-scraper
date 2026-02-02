@@ -4,17 +4,36 @@ Rather than doing the manual work of adding each product to our Shopify store in
 
 Currently, we use the CSV upload option to bulk upload products into our Shopfiy store. More information can be found here along with a template CSV file: [Using CSV files](https://help.shopify.com/en/manual/products/import-export/using-csv)
 
-Currently, we only support scraping for the [Hummingbird Wholesale](https://hummingbirdwholesale.com) site at this time.
+Previously, we supported scraping for the [Hummingbird Wholesale](https://hummingbirdwholesale.com) site. That code has been moved to the [archive/hummingbird](./archive/hummingbird) folder. Going forward we'll primarily support Azure Standard and possibly others going forward.
 
-## Run
+## Using the repo
 
-Run the [main.py](./main.py) script to pull all product information from Hummingbird Wholesale, save it to a file, and then format the data into a CSV for upload into the Shopify store.
+### Pre-requisites
+- [uv](https://docs.astral.sh/uv/)
+- [docker](https://www.docker.com/products/docker-desktop/)
 
-> Note: be sure to have Python 3.8+ installed to run the program
+Optionally, you can use a database UI like [dbeaver](https://dbeaver.io/download/).
 
-1. `pip install -r requirements.txt`
-1. `python3 ./main.py`
-1. On the Shopify products page, click the `Import` button in the top right, and select the `outputs/hummingbird_products.csv` file.
+### Getting started locally
+1. Run `uv sync` to install dependencies
+2. Create a local environment file with `cp .env.example .env.local`
+3. Start up your local docker daemon
+4. Run `docker compose up -d` to start up the local database
+5. You should now see the volume and container created. You can verify things are running by checking in the Docker Desktop app or by running `docker compose ps` and verifying that the `azure-db` service is running.
+
+Setting up `dbeaver`:
+1. Create a new PostgreSQL connection
+2. Set the Host to `localhost`
+3. Set the Port to `5999`
+4. Set the Database to `azure`
+5. Set the Username to `root`
+6. Set the Password to `localpassword` (or whatever you have set in the `.env.local` file)
+
+### Running the scraper
+1. Run `uv run main.py`
+2. Verify that the scraper completes by checking the databse in DBeaver or similar access
+
+
 
 > In order to update new prices, run the script and when uploading select the `Overwrite any current products...` check box. This will ensure that new prices overwrite old prices.
 
@@ -30,10 +49,11 @@ We use pylint to check each pull request and make sure everything is in line wit
 
 ### Lint repo with pylint:
 ```bash
-pylint $(find . -name "*.py" | xargs)
+uv run pylint ./src
 ```
 
 ### Running tests:
+[[[UNDER CONSTRUCTION]]]
 Tests are written using the [unittest](https://docs.python.org/3/library/unittest.html) builtin library.
 
 To run all tests for the project:
@@ -46,13 +66,7 @@ python -m unittest discover -s tests/unit
 ```
 
 #### Integration tests
+[[[UNDER CONSTRUCTION]]]
 ```bash
 python -m unittest discover -s tests/integration
 ```
-
-## Future
-Future development projects/ideas:
-* [ ] Write full unit and integration tests for system so we know when something changes in a bad way
-* [ ] Make use of the Shopify [GraphQL Admin API](https://shopify.dev/api/usage/bulk-operations/imports) to automate the import process rather than generating a CSV
-* [x] Genericize features/functionality to allow us to wrap/import from any wholesaler partner
-* [ ] Connect to [AWS Lambda](https://docs.aws.amazon.com/lambda/latest/dg/lambda-python.html) and expand functionality so that we can run it on a schedule to validate product availability

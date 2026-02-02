@@ -71,6 +71,7 @@ if __name__ == "__main__":
     database.batch_execute(packaging_query, formatted_packaging)
     logger.info(f"Inserted {len(formatted_packaging)} packaging records")
 
+    # pylint: disable=fixme
     # TODO: Only insert prices for existing packages
     prices_query = sql.SQL(
         """

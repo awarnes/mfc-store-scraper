@@ -49,7 +49,7 @@ We use pylint to check each pull request and make sure everything is in line wit
 
 ### Lint repo with pylint:
 ```bash
-uv run pylint ./src
+uv run pylint .
 ```
 
 ### Running tests:

@@ -2,6 +2,7 @@
 
 import json
 from typing import Dict, List
+from psycopg.types.json import Jsonb
 
 import requests
 
@@ -92,11 +93,11 @@ class Azure:
                     "description": product.get("description"),
                     "slug": product.get("slug"),
                     "storage_climate": product.get("storageClimate"),
-                    "unshippable_regions": json.dumps(
+                    "unshippable_regions": Jsonb(
                         product.get("unshippableRegions")
                     ),
-                    "brand": json.dumps(product.get("brand")),
-                    "substitutions": json.dumps(product.get("substitutions")),
+                    "brand": Jsonb(product.get("brand")),
+                    "substitutions": Jsonb(product.get("substitutions")),
                 }
             )
 
@@ -106,14 +107,14 @@ class Azure:
                         "products_id": product.get("id"),
                         "code": pack.get("code"),
                         "size": pack.get("size"),
-                        "weight": json.dumps(pack.get("weight")),
+                        "weight": Jsonb(pack.get("weight")),
                         "stock": pack.get("stock"),
-                        "images": json.dumps(pack.get("images")),
+                        "images": Jsonb(pack.get("images")),
                         "rewards_enabled": pack.get("rewardsEnabled"),
                         "freight_handling_required": pack.get(
                             "freightHandlingRequired"
                         ),
-                        "tags": json.dumps(pack.get("tags")),
+                        "tags": Jsonb(pack.get("tags")),
                         "primary_category": pack.get("primary-category"),
                         "favorites": pack.get("favorites"),
                         "next_purchase_arrival": pack.get("next-purchase-arrival"),

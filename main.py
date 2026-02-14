@@ -1,6 +1,6 @@
 """Main CLI entry point"""
 
-from psycopg2 import sql
+from psycopg import sql
 
 from src.azure.azure import Azure
 from src.lib.logger import logger
@@ -27,7 +27,6 @@ if __name__ == "__main__":
 
     # pylint: disable=line-too-long
     product_query = sql.SQL(
-
         """
         INSERT INTO azure.products (id, name, short_description, description, slug, storage_climate, unshippable_regions, brand, substitutions)
         VALUES (%(id)s,%(name)s,%(short_description)s,%(description)s,%(slug)s,%(storage_climate)s,%(unshippable_regions)s,%(brand)s,%(substitutions)s)

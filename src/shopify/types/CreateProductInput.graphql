@@ -1,0 +1,64 @@
+enum CombinedListingsRole {
+    CHILD
+    PARENT
+}
+
+type MetafieldInput {
+    id: ID
+    # The unique ID of the metafield. Using owner_id, namespace, and key is preferred for creating and updating.
+    key: String
+    # The unique identifier for a metafield within its namespace.
+    # Required when creating a metafield, but optional when updating. Used to help identify the metafield when updating, but can't be updated itself.
+    # Must be 2-64 characters long and can contain alphanumeric, hyphen, and underscore characters.
+    namespace: String
+    # The container for a group of metafields that the metafield is or will be associated with. Used in tandem with key to lookup a metafield on a resource, preventing conflicts with other metafields with the same key.
+    # Required when creating a metafield, but optional when updating. Used to help identify the metafield when updating, but can't be updated itself.
+    # Must be 3-255 characters long and can contain alphanumeric, hyphen, and underscore characters.
+    type: String
+    # The type of data that is stored in the metafield. Refer to the list of supported types.
+    # Required when creating or updating a metafield without a definition.
+    value: String
+    # The data stored in the metafield. Always stored as a string, regardless of the metafield's type.
+}
+
+type CreateProductInput {
+    category: ID
+    # The ID of the category that's associated with the product.
+    collectionsToJoin: [ID!]
+    # A list of collection IDs to associate with the product.
+    combinedListingRole: CombinedListingsRole
+    # The role of the product in a combined listing.
+    descriptionHtml: String
+    # The description of the product, with HTML tags. For example, the description might include bold <strong></strong> and italic <i></i> text.
+    giftCard: Boolean
+    # Whether the product is a gift card.
+    giftCardTemplateSuffix: String
+    # The theme template that's used when customers view a gift card in a store.
+    handle: String
+    # A unique, human-readable string that's used to identify the product in URLs. A handle can contain letters, hyphens (-), and numbers, but no spaces. If no handle is explicitly provided, then the title is used to construct the product's handle. For example, if a product is titled "Black Sunglasses" and no handle is provided, then the handle black-sunglasses is generated (unless that handle is already taken, in which case a suffix is added to make the handle unique).
+    metafields: [MetafieldInput!]
+    # The custom fields to associate with the product for the purposes of adding and storing additional information.
+
+    productOptions: [OptionCreateInput!]
+    # A list of product options and option values. Maximum product options: three. There's no limit on the number of option values.
+
+    productType: String
+    # The product type that merchants define.
+    requiresSellingPlan: Boolean
+    # Whether the product can only be purchased with a selling plan. Products that are sold on subscription (requiresSellingPlan: true) can be updated only for online stores. If you update a product to be subscription-only (requiresSellingPlan:false), then the product is unpublished from all channels except the online store.
+    seo: SEOInput
+    # The SEO title and description that are associated with a product.
+
+    status: ProductStatus
+    # The product status, which controls visibility across all sales channels.
+
+    tags: [String!]
+    # A list of searchable keywords that are associated with the product. For example, a merchant might apply the sports and summer tags to products that are associated with sportwear for summer.
+    # Updating tags overwrites any existing tags that were previously added to the product. To add new tags without overwriting existing tags, use the tagsAdd mutation.
+    templateSuffix: String
+    # The theme template that's used when customers view a product in a store.
+    title: String
+    # The name for the product that displays to customers. If no handle is explicitly provided, then the title is used to construct the product's handle. For example, if a product is titled "Black Sunglasses" and no handle is provided, then the handle black-sunglasses is generated.
+    vendor: String
+    # The name of the product's vendor.
+}

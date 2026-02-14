@@ -1,0 +1,30 @@
+mutation ProductCreate($product: ProductCreateInput
+    productCreate(
+        product: {
+            title: "Cool socks"
+            productOptions: [
+                { name: "Color", values: [{ name: "Red" }, { name: "Blue" }] }
+                { name: "Size", values: [{ name: "Small" }, { name: "Large" }] }
+            ]
+        }
+    ) {
+        product {
+            id
+            title
+            options {
+                id
+                name
+                position
+                optionValues {
+                    id
+                    name
+                    hasVariants
+                }
+            }
+        }
+        userErrors {
+            field
+            message
+        }
+    }
+}

@@ -2,14 +2,16 @@
 
 import json
 from typing import Dict, List
-from psycopg.types.json import Jsonb
 
 import requests
+from psycopg.types.json import Jsonb
 
 from src.settings import settings
 
-class Azure:
-    """Wrapper class for scraping data from Azure website"""
+
+class AzureScraper:
+    """Wrapper class for scraping data from the Azure Standard website"""
+
     app_id = ""
     api_key = ""
 
@@ -37,7 +39,7 @@ class Azure:
             json={
                 "params": "query=&attributesToHighlight=&filters=depth=1&hitsPerPage=5000"
             },
-            timeout=5
+            timeout=5,
         )
 
         return resp.json().get("hits")
@@ -51,7 +53,7 @@ class Azure:
             json={
                 "params": f"query=&filters=packaging.stock%20%3E%200&attributesToHighlight=&attributesToRetrieve=id%2Cbrand.name%2Cname%2Csubstitutions%2Cfavorites%2CstorageClimate%2Cslug%2CmaxStorageDays%2CtreatAsActive%2CunshippableRegions%2Cpackaging.code%2Cpackaging.price%2Cpackaging.weight%2Cpackaging.volume%2Cpackaging.tags%2Cpackaging.images%2Cpackaging.size%2Cpackaging.stock%2Cpackaging.next-purchase-arrival%2Cpackaging.favorites%2Cpackaging.bargain-bin-notes%2Cpackaging.rewardsEnabled%2Cpackaging.freightHandlingRequired%2Cpackaging.vendorShortedLastPurchase%2Cpackaging.primary-category%2Cdescription%2CshortDescription&queryType=prefixNone&facetFilters=%5B%5B%5D%2C%22category-ids%3A{category_id}%22%2C%5B%5D%5D&optionalFilters=%5B%22isPromoted%3Atrue%22%5D&hitsPerPage=5000&page={page}"
             },
-            timeout=5
+            timeout=5,
         )
 
         return resp.json()
@@ -75,10 +77,12 @@ class Azure:
 
     def get_local_products(self):
         """Get products from a local file"""
-        with open("../../outputs/data.json", "r", encoding='utf8') as f:
+        with open("../../outputs/data.json", "r", encoding="utf8") as f:
             return json.loads(f.read())
 
-    def format_products(self, unformatted_products) -> tuple[List[Dict], List[Dict], List[Dict]]:
+    def format_products(
+        self, unformatted_products
+    ) -> tuple[List[Dict], List[Dict], List[Dict]]:
         """Format Azure products for insertion into database"""
         products = []
         packaging = []
@@ -93,9 +97,7 @@ class Azure:
                     "description": product.get("description"),
                     "slug": product.get("slug"),
                     "storage_climate": product.get("storageClimate"),
-                    "unshippable_regions": Jsonb(
-                        product.get("unshippableRegions")
-                    ),
+                    "unshippable_regions": Jsonb(product.get("unshippableRegions")),
                     "brand": Jsonb(product.get("brand")),
                     "substitutions": Jsonb(product.get("substitutions")),
                 }

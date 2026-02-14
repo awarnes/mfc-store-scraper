@@ -2,21 +2,21 @@
 
 from psycopg import sql
 
-from src.azure.azure import Azure
+from src.azure.scraper import AzureScraper
 from src.lib.logger import logger
 from src.db.postgres import Database
 
 if __name__ == "__main__":
     logger.info("Starting Azure product scraper")
 
-    azure = Azure()
+    scraper = AzureScraper()
 
     logger.info("Retrieving all products...")
-    all_products = azure.get_all_products()
+    all_products = scraper.get_all_products()
     logger.debug(f"Retrieved {len(all_products)} products")
 
     logger.info("Formatting products...")
-    (formatted_products, formatted_packaging, formatted_prices) = azure.format_products(
+    (formatted_products, formatted_packaging, formatted_prices) = scraper.format_products(
         all_products
     )
     logger.debug(f"Formatted {len(formatted_products)} products, \

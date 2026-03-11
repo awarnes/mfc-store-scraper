@@ -6,12 +6,14 @@ from psycopg.types.json import Jsonb
 
 import requests
 
+from src.lib.logger import logger
 from src.settings import settings
 
 class Azure:
     """Wrapper class for scraping data from Azure website"""
     app_id = ""
     api_key = ""
+    __categories = None
 
     def __init__(self, app_id=None, api_key=None):
         self.app_id = app_id or settings.app_id
@@ -31,16 +33,19 @@ class Azure:
 
     def get_d1_categories(self):
         """Get depth=1 categories for Azure"""
-        resp = requests.post(
-            self.get_url("categories"),
-            headers=self.headers(),
-            json={
-                "params": "query=&attributesToHighlight=&filters=depth=1&hitsPerPage=5000"
-            },
-            timeout=5
-        )
+        if self.__categories is None:
+            logger.info('Fetching categories')
+            resp = requests.post(
+                self.get_url("categories"),
+                headers=self.headers(),
+                json={
+                    "params": "query=&attributesToHighlight=&filters=depth=1&hitsPerPage=5000"
+                },
+                timeout=5
+            )
+            self.__categories = resp.json().get("hits")
 
-        return resp.json().get("hits")
+        return self.__categories
 
     def get_products_for_category(self, category_id, page=0):
         """Get all products for a given category"""
@@ -61,13 +66,22 @@ class Azure:
         hits = []
         for category in self.get_d1_categories():
             page = 0
-            num_pages = 100000
-
+            num_pages = 1 ## 100000
+             #print(f"CATEGORY: {category}")
             while page < num_pages:
-                resp = self.get_products_for_category(category.get("id"), page)
+                id = category.get("id")
+                ## seems like they all just have one ancestor so I am adding that to the category
+                category_name = f"{category.get('ancestors', [dict(slug='Root')])[0].get('slug')}.{category.get('slug')}"
+
+                resp = self.get_products_for_category(id, page)
                 if resp.get("nbHits") >= 2000:
-                    print(f"More than 2k products in category: {category['id']}")
-                hits += resp.get("hits")
+                    print(f"More than 2k products in category: {id}")
+                _hits = resp.get("hits")
+                ## make sure that each product has its category name
+                for hit in _hits:
+                    hit['category'] = category_name
+
+                hits += _hits
                 num_pages = resp.get("nbPages")
                 page += 1
 
@@ -83,6 +97,8 @@ class Azure:
         products = []
         packaging = []
         prices = []
+        categories = self.get_d1_categories()
+
 
         for product in unformatted_products:
             products.append(
@@ -98,6 +114,7 @@ class Azure:
                     ),
                     "brand": Jsonb(product.get("brand")),
                     "substitutions": Jsonb(product.get("substitutions")),
+                    "category": product.get("category"),
                 }
             )
 

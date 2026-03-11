@@ -1,6 +1,6 @@
 """Main CLI entry point"""
 
-from psycopg2 import sql
+from psycopg import sql
 
 from src.azure.azure import Azure
 from src.lib.logger import logger

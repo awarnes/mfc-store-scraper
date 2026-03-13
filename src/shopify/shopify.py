@@ -1,19 +1,27 @@
-from pathlib import Path
+"""Module for managing Shopify GraphQL connections"""
 
 import requests
 
 from src.settings import settings
+from src.shopify.mutations import Mutations
+from src.shopify.queries import Queries
+
+class ShopifyQueryError(Exception):
+    """Generic error for a failed Shopify query"""
 
 
 class Shopify:
+    """Class for handling Shopify GraphQL queries and mutations"""
+
     _graphql_url = (
         "https://montavillafoodcoop.myshopify.com/admin/api/2026-01/graphql.json"
     )
     _auth_url = "https://montavillafoodcoop.myshopify.com/admin/oauth/access_token"
 
-    access_token: str = None
+    access_token: str | None = None
 
     def get_token(self):
+        """Get bearer token from Shopify"""
         resp = requests.post(
             self._auth_url,
             headers={"content-type": "application/json"},
@@ -31,7 +39,8 @@ class Shopify:
 
         return self.access_token
 
-    def query(self, query: str):
+    def query(self, query: str, variables: dict) -> dict:
+        """Perform GraphQL query against Shopify store"""
         if not self.access_token:
             self.get_token()
 
@@ -41,16 +50,17 @@ class Shopify:
                 "content-type": "application/json",
                 "x-shopify-access-token": self.access_token,
             },
-            json={"query": query},
+            json={"query": query, "variables": variables},
             timeout=5,
         )
 
         if resp.ok:
             return resp.json()
 
-    def query_file(self, path: str):
-        query = Path(path).read_text()
+        raise ShopifyQueryError()
 
+    def query_file(self, query: Queries | Mutations, variables: dict) -> dict:
+        """Perform GraphQL query against Shopify store using given .graphql file"""
         if not self.access_token:
             self.get_token()
 
@@ -60,14 +70,18 @@ class Shopify:
                 "content-type": "application/json",
                 "x-shopify-access-token": self.access_token,
             },
-            json={"query": query},
+            json={"query": query, "variables": variables},
             timeout=5,
         )
 
         if resp.ok:
             return resp.json()
 
+        raise ShopifyQueryError()
 
-if __name__ == "__main__":
-    s = Shopify()
-    print(s.query_file("./src/shopify/queries/get_products.graphql"))
+    def current_app(self):
+        """Returns data on the currently authenticated application"""
+
+        return self.query_file(
+            Queries.current_app_installation, {}
+        )

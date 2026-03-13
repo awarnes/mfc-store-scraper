@@ -30,7 +30,7 @@ Setting up `dbeaver`:
 6. Set the Password to `localpassword` (or whatever you have set in the `.env.local` file)
 
 ### Running the scraper
-1. Run `uv run main.py`
+1. Run `uv run python -m main`
 2. Verify that the scraper completes by checking the databse in DBeaver or similar access
 
 

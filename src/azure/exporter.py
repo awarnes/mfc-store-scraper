@@ -5,7 +5,14 @@ Module for exporting Azure Standard data for importing into Shopify
 from src.shopify.shopify_csv import ShopifyProduct
 
 # """
-# Title,URL handle,Description,Vendor,Product category,Type,Tags,Published on online store,Status,SKU,Barcode,Option1 name,Option1 value,Option1 Linked To,Option2 name,Option2 value,Option2 Linked To,Option3 name,Option3 value,Option3 Linked To,Price,Compare-at price,Cost per item,Charge tax,Tax code,Inventory tracker,Inventory quantity,Continue selling when out of stock,Weight value (grams),Weight unit for display,Requires shipping,Fulfillment service,Product image URL,Image position,Image alt text,Variant image URL,Gift card,SEO title,SEO description
+# Title,URL handle,Description,Vendor,Product category,Type,Tags,
+# Published on online store,Status,SKU,Barcode,Option1 name,Option1 value,
+# Option1 Linked To,Option2 name,Option2 value,Option2 Linked To,Option3 name,
+# Option3 value,Option3 Linked To,Price,Compare-at price,Cost per item,Charge tax,
+# Tax code,Inventory tracker,Inventory quantity,Continue selling when out of stock,
+# Weight value (grams),Weight unit for display,Requires shipping,Fulfillment service,
+# Product image URL,Image position,Image alt text,Variant image URL,Gift card,
+# SEO title,SEO description
 # """
 
 # "Title",
@@ -50,8 +57,10 @@ from src.shopify.shopify_csv import ShopifyProduct
 
 
 class AzureExporter:
+    """Helper to export Azure products to Shopify formatted CSV"""
+
     def get_products(self):
-        pass
+        """Retrieve products from database for formatting"""
         # connect to db
         # get products
         # for each product get packaging and most recent price

@@ -1,6 +1,7 @@
 """Wrapper class for scraping data from the Azure website"""
 
 import json
+import re
 from typing import Dict, List
 
 import requests
@@ -82,11 +83,12 @@ class AzureScraper:
 
     def format_products(
         self, unformatted_products
-    ) -> tuple[List[Dict], List[Dict], List[Dict]]:
+    ) -> tuple[List[Dict], List[Dict], List[Dict], List[Dict]]:
         """Format Azure products for insertion into database"""
         products = []
         packaging = []
         prices = []
+        media = []
 
         for product in unformatted_products:
             products.append(
@@ -111,7 +113,6 @@ class AzureScraper:
                         "size": pack.get("size"),
                         "weight": Jsonb(pack.get("weight")),
                         "stock": pack.get("stock"),
-                        "images": Jsonb(pack.get("images")),
                         "rewards_enabled": pack.get("rewardsEnabled"),
                         "freight_handling_required": pack.get(
                             "freightHandlingRequired"
@@ -122,6 +123,17 @@ class AzureScraper:
                         "next_purchase_arrival": pack.get("next-purchase-arrival"),
                     }
                 )
+
+                for image_url in pack.get("images"):
+                    media.append(
+                        {
+                            "packaging_code": pack.get("code"),
+                            "original_url": image_url,
+                            "file_name": re.search(
+                                r"([0-9\-a-z]+)$", image_url
+                            ).group(),
+                        }
+                    )
 
                 prices.append(
                     {
@@ -139,4 +151,4 @@ class AzureScraper:
                     }
                 )
 
-        return (products, packaging, prices)
+        return (products, packaging, prices, media)

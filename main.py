@@ -3,8 +3,8 @@
 from psycopg import sql
 
 from src.azure.scraper import AzureScraper
-from src.lib.logger import logger
 from src.db.postgres import Database
+from src.lib.logger import logger
 
 if __name__ == "__main__":
     logger.info("Starting Azure product scraper")
@@ -16,11 +16,13 @@ if __name__ == "__main__":
     logger.debug(f"Retrieved {len(all_products)} products")
 
     logger.info("Formatting products...")
-    (formatted_products, formatted_packaging, formatted_prices) = scraper.format_products(
-        all_products
+    (formatted_products, formatted_packaging, formatted_prices, formatted_media) = (
+        scraper.format_products(all_products)
     )
-    logger.debug(f"Formatted {len(formatted_products)} products, \
-        {len(formatted_packaging)} packaging, {len(formatted_prices)} prices")
+    logger.debug(
+        f"Formatted {len(formatted_products)} products, \
+        {len(formatted_packaging)} packaging, {len(formatted_prices)} prices"
+    )
 
     database = Database()
     logger.info("Connected to database")
@@ -49,14 +51,13 @@ if __name__ == "__main__":
 
     packaging_query = sql.SQL(
         """
-        INSERT INTO azure.packaging (products_id, code, size, weight, stock, images, rewards_enabled, freight_handling_required, tags, primary_category,favorites,next_purchase_arrival)
-        VALUES (%(products_id)s,%(code)s,%(size)s,%(weight)s,%(stock)s,%(images)s,%(rewards_enabled)s,%(freight_handling_required)s,%(tags)s,%(primary_category)s,%(favorites)s,%(next_purchase_arrival)s)
+        INSERT INTO azure.packaging (products_id, code, size, weight, stock, rewards_enabled, freight_handling_required, tags, primary_category,favorites,next_purchase_arrival)
+        VALUES (%(products_id)s,%(code)s,%(size)s,%(weight)s,%(stock)s,%(rewards_enabled)s,%(freight_handling_required)s,%(tags)s,%(primary_category)s,%(favorites)s,%(next_purchase_arrival)s)
         ON CONFLICT(products_id, code)
         DO UPDATE SET
             size = EXCLUDED.size,
             weight = EXCLUDED.weight,
             stock = EXCLUDED.stock,
-            images = EXCLUDED.images,
             rewards_enabled = EXCLUDED.rewards_enabled,
             freight_handling_required = EXCLUDED.freight_handling_required,
             tags = EXCLUDED.tags,
@@ -82,5 +83,16 @@ if __name__ == "__main__":
     logger.info("Inserting prices...")
     database.batch_execute(prices_query, formatted_prices)
     logger.info(f"Inserted {len(formatted_prices)} price records")
+
+    media_query = sql.SQL(
+        """
+        INSERT INTO azure.media (packaging_code, original_url, file_name)
+        VALUES (%(packaging_code)s,%(original_url)s, %(file_name)s);
+    """
+    )
+
+    logger.info("Inserting media...")
+    database.batch_execute(media_query, formatted_media)
+    logger.info(f"Inserted {len(formatted_media)} media records")
 
     logger.success("Azure product scraper completed successfully")

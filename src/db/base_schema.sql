@@ -1,4 +1,6 @@
--- TABLE DEFINITIONS
+CREATE EXTENSION IF NOT EXISTS ltree;
+
+  -- TABLE DEFINITIONS
 -- Patch History Table
 CREATE TABLE IF NOT EXISTS public.patch_history (
     filename TEXT PRIMARY KEY,
@@ -27,6 +29,7 @@ CREATE TABLE IF NOT EXISTS azure.products (
     unshippable_regions JSONB,
     brand JSONB,
     substitutions JSONB,
+    category ltree,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );

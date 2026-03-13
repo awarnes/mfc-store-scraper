@@ -7,6 +7,7 @@ from typing import Dict, List
 import requests
 from psycopg.types.json import Jsonb
 
+from src.lib.logger import logger
 from src.settings import settings
 
 
@@ -15,6 +16,7 @@ class AzureScraper:
 
     app_id = ""
     api_key = ""
+    __categories = None
 
     def __init__(self, app_id=None, api_key=None):
         self.app_id = app_id or settings.app_id
@@ -34,24 +36,27 @@ class AzureScraper:
 
     def get_d1_categories(self):
         """Get depth=1 categories for Azure"""
-        resp = requests.post(
-            self.get_url("categories"),
-            headers=self.headers(),
-            json={
-                "params": "query=&attributesToHighlight=&filters=depth=1&hitsPerPage=5000"
-            },
-            timeout=5,
-        )
+        if self.__categories is None:
+            logger.info('Fetching categories')
+            resp = requests.post(
+                self.get_url("categories"),
+                headers=self.headers(),
+                json={
+                    "params": "query=&attributesToHighlight=&filters=depth=1&hitsPerPage=5000"
+                },
+                timeout=5,
+            )
+            self.__categories = resp.json().get("hits")
 
-        return resp.json().get("hits")
+        return self.__categories
 
     def get_products_for_category(self, category_id, page=0):
         """Get all products for a given category"""
-        # pylint: disable=line-too-long
         resp = requests.post(
             self.get_url("products"),
             headers=self.headers(),
             json={
+                # pylint: disable=line-too-long
                 "params": f"query=&filters=packaging.stock%20%3E%200&attributesToHighlight=&attributesToRetrieve=id%2Cbrand.name%2Cname%2Csubstitutions%2Cfavorites%2CstorageClimate%2Cslug%2CmaxStorageDays%2CtreatAsActive%2CunshippableRegions%2Cpackaging.code%2Cpackaging.price%2Cpackaging.weight%2Cpackaging.volume%2Cpackaging.tags%2Cpackaging.images%2Cpackaging.size%2Cpackaging.stock%2Cpackaging.next-purchase-arrival%2Cpackaging.favorites%2Cpackaging.bargain-bin-notes%2Cpackaging.rewardsEnabled%2Cpackaging.freightHandlingRequired%2Cpackaging.vendorShortedLastPurchase%2Cpackaging.primary-category%2Cdescription%2CshortDescription&queryType=prefixNone&facetFilters=%5B%5B%5D%2C%22category-ids%3A{category_id}%22%2C%5B%5D%5D&optionalFilters=%5B%22isPromoted%3Atrue%22%5D&hitsPerPage=5000&page={page}"
             },
             timeout=5,
@@ -64,13 +69,22 @@ class AzureScraper:
         hits = []
         for category in self.get_d1_categories():
             page = 0
-            num_pages = 100000
-
+            num_pages = 1
             while page < num_pages:
-                resp = self.get_products_for_category(category.get("id"), page)
+                id = category.get("id")
+                # seems like they all just have one ancestor, adding that to the category
+                category_name = f"{category.get('ancestors', [dict(slug='Root')])[0].get('slug')}.{category.get('slug')}"
+
+                resp = self.get_products_for_category(id, page)
                 if resp.get("nbHits") >= 2000:
-                    print(f"More than 2k products in category: {category['id']}")
-                hits += resp.get("hits")
+                    print(f"More than 2k products in category: {id}")
+                _hits = resp.get("hits")
+
+                ## make sure that each product has its category name
+                for hit in _hits:
+                    hit['category'] = category_name
+
+                hits += _hits
                 num_pages = resp.get("nbPages")
                 page += 1
 
@@ -88,6 +102,7 @@ class AzureScraper:
         products = []
         packaging = []
         prices = []
+
         media = []
 
         for product in unformatted_products:
@@ -102,6 +117,7 @@ class AzureScraper:
                     "unshippable_regions": Jsonb(product.get("unshippableRegions")),
                     "brand": Jsonb(product.get("brand")),
                     "substitutions": Jsonb(product.get("substitutions")),
+                    "category": product.get("category"),
                 }
             )
 

@@ -30,8 +30,9 @@ if __name__ == "__main__":
     # pylint: disable=line-too-long
     product_query = sql.SQL(
         """
-        INSERT INTO azure.products (id, name, short_description, description, slug, storage_climate, unshippable_regions, brand, substitutions)
-        VALUES (%(id)s,%(name)s,%(short_description)s,%(description)s,%(slug)s,%(storage_climate)s,%(unshippable_regions)s,%(brand)s,%(substitutions)s)
+        INSERT INTO azure.products (id, name, short_description, description, slug, storage_climate, unshippable_regions, brand, substitutions, category)
+        VALUES
+        (%(id)s,%(name)s,%(short_description)s,%(description)s,%(slug)s,%(storage_climate)s,%(unshippable_regions)s,%(brand)s,%(substitutions)s, %(category)s)
         ON CONFLICT(id)
         DO UPDATE SET
             name = EXCLUDED.name,
@@ -41,7 +42,9 @@ if __name__ == "__main__":
             storage_climate = EXCLUDED.storage_climate,
             unshippable_regions = EXCLUDED.unshippable_regions,
             brand = EXCLUDED.brand,
-            substitutions = EXCLUDED.substitutions;
+            substitutions = EXCLUDED.substitutions,
+            category = EXCLUDED.category,
+            updated_at = now()
     """
     )
 

@@ -1,0 +1,46 @@
+query GetCurrentAppInfo {
+  shop {
+    id
+    myshopifyDomain
+  }
+  currentAppInstallation {
+    accessScopes {
+      handle
+      description
+    }
+    activeSubscriptions{
+      id
+      name
+      status
+      createdAt
+    }
+    app {
+      id
+      title
+      apiKey
+      appStoreAppUrl
+      availableAccessScopes {
+        handle
+        description
+      }
+      optionalAccessScopes {
+        handle
+        description
+      }
+      requestedAccessScopes {
+        handle
+        description
+      }
+      failedRequirements{
+        action {
+          id
+          title
+          url
+        }
+        message
+      }
+      features
+      handle
+    }
+  }
+}

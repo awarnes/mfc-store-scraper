@@ -1,0 +1,19 @@
+mutation updateOption(
+  $productId: ID!,
+  $option: OptionUpdateInput!,
+  $optionValuesToAdd: [OptionValueCreateInput!],
+  $optionValuesToUpdate: [OptionValueUpdateInput!],
+  $optionValuesToDelete: [ID!]
+  $variantStrategy: ProductOptionUpdateVariantStrategy
+) {
+  productOptionUpdate(
+    productId: $productId,
+    option: $option,
+    optionValuesToAdd: $optionValuesToAdd,
+    optionValuesToUpdate: $optionValuesToUpdate,
+    optionValuesToDelete: $optionValuesToDelete,
+    variantStrategy: $variantStrategy
+  ) {
+    userErrors { field message code }
+  }
+}

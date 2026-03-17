@@ -6,7 +6,7 @@ import requests
 
 from src.shopify.shopify import Shopify
 from src.shopify.mutations import Mutations
-from src.shopify.queries import Queries
+
 
 class MediaDownloadFailedError(Exception):
     """Error thrown when a media download fails"""

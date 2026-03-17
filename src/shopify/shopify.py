@@ -6,6 +6,7 @@ from src.settings import settings
 from src.shopify.mutations import Mutations
 from src.shopify.queries import Queries
 
+
 class ShopifyQueryError(Exception):
     """Generic error for a failed Shopify query"""
 
@@ -82,6 +83,4 @@ class Shopify:
     def current_app(self):
         """Returns data on the currently authenticated application"""
 
-        return self.query_file(
-            Queries.current_app_installation, {}
-        )
+        return self.query_file(Queries.current_app_installation, {})

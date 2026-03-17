@@ -37,7 +37,7 @@ class AzureScraper:
     def get_d1_categories(self):
         """Get depth=1 categories for Azure"""
         if self.__categories is None:
-            logger.info('Fetching categories')
+            logger.info("Fetching categories")
             resp = requests.post(
                 self.get_url("categories"),
                 headers=self.headers(),
@@ -82,7 +82,7 @@ class AzureScraper:
 
                 ## make sure that each product has its category name
                 for hit in _hits:
-                    hit['category'] = category_name
+                    hit["category"] = category_name
 
                 hits += _hits
                 num_pages = resp.get("nbPages")

@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS ltree;
 
-  -- TABLE DEFINITIONS
+-- TABLE DEFINITIONS
 -- Patch History Table
 CREATE TABLE IF NOT EXISTS public.patch_history (
     filename TEXT PRIMARY KEY,
@@ -40,7 +40,7 @@ FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TABLE IF NOT EXISTS azure.packaging (
-    id SERIAL,
+    id SERIAL PRIMARY KEY,
     products_id INTEGER NOT NULL,
     code TEXT,
     shopify_variant_id TEXT,
@@ -64,7 +64,7 @@ FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TABLE IF NOT EXISTS azure.prices (
-    id SERIAL,
+    id SERIAL PRIMARY KEY,
     packaging_code TEXT NOT NULL,
     retail_dollars REAL,
     retail_unit TEXT,
@@ -73,13 +73,8 @@ CREATE TABLE IF NOT EXISTS azure.prices (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE OR REPLACE TRIGGER set_timestamp_update_prices
-BEFORE UPDATE ON azure.prices
-FOR EACH ROW
-EXECUTE PROCEDURE trigger_set_timestamp();
-
 CREATE TABLE IF NOT EXISTS azure.media (
-    id SERIAL,
+    id SERIAL PRIMARY KEY,
     packaging_code TEXT NOT NULL,
     original_url TEXT NOT NULL,
     file_name TEXT NOT NULL,

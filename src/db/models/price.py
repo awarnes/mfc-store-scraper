@@ -1,5 +1,7 @@
 """Pydantic model for the `azure.prices` table"""
 
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -12,4 +14,4 @@ class PriceModel(BaseModel):
     retail_unit: str
     wholesale_dollars: float
     wholesale_unit: str
-    created_at: str
+    created_at: datetime

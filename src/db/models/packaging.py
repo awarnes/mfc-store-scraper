@@ -1,5 +1,7 @@
 """Pydantic model for the `azure.packaging` table"""
 
+from datetime import datetime
+
 from pydantic import BaseModel, JsonValue
 
 
@@ -9,7 +11,7 @@ class PackagingModel(BaseModel):
     id: int
     products_id: int
     code: str
-    shopify_variant_id: str
+    shopify_variant_id: str | None
     size: str
     weight: JsonValue
     stock: int
@@ -18,6 +20,6 @@ class PackagingModel(BaseModel):
     tags: JsonValue
     primary_category: int
     favorites: int
-    next_purchase_arrival: str
-    created_at: str
-    updated_at: str
+    next_purchase_arrival: str | None
+    created_at: datetime
+    updated_at: datetime

@@ -11,7 +11,7 @@ class MediaModel(BaseModel):
     id: int
     packaging_code: str
     original_url: str
-    file_name: str = None
-    shopify_media_id: str = None
+    file_name: str | None = None
+    shopify_media_id: str | None = None
     created_at: datetime
     updated_at: datetime

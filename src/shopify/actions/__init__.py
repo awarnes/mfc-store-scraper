@@ -2,3 +2,5 @@
 
 from .create_media import create_media
 from .create_product import create_product
+
+__all__ = ["create_media", "create_product"]

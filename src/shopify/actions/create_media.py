@@ -13,6 +13,7 @@ from src.lib.logger import logger
 def create_media(media_record: MediaModel):
     """Create a media in Shopify that can be associated with a product"""
     if media_record.shopify_media_id:
+        logger.debug("Media already uploaded, skipping...")
         return media_record
 
     media_manager = MediaManager()

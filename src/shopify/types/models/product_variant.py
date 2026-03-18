@@ -1,6 +1,9 @@
-from pydantic import BaseModel
+"""Shopify ProductVariant model"""
+
 from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel
 
 from src.shopify.types.models.money import Money
 from src.shopify.types.models.metafield import Metafield

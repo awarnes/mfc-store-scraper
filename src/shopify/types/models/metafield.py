@@ -1,3 +1,5 @@
+"""Shopify Metafield model"""
+
 from pydantic import BaseModel
 
 

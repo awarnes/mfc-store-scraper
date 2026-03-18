@@ -71,13 +71,14 @@ class AzureScraper:
             page = 0
             num_pages = 1
             while page < num_pages:
-                id = category.get("id")
+                category_id = category.get("id")
                 # seems like they all just have one ancestor, adding that to the category
-                category_name = f"{category.get('ancestors', [dict(slug='Root')])[0].get('slug')}.{category.get('slug')}"
+                # pylint: disable=line-too-long
+                category_name = f"{category.get('ancestors', {'slug': 'Root'})[0].get('slug')}.{category.get('slug')}"
 
                 resp = self.get_products_for_category(id, page)
                 if resp.get("nbHits") >= 2000:
-                    print(f"More than 2k products in category: {id}")
+                    print(f"More than 2k products in category: {category_id}")
                 _hits = resp.get("hits")
 
                 ## make sure that each product has its category name

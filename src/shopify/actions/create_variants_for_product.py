@@ -1,3 +1,5 @@
+"""Shopify action to create variants for a given product from the local DB"""
+
 from typing import List
 
 from psycopg import rows, sql
@@ -74,12 +76,16 @@ def create_variants_for_product(product: ProductModel) -> PackagingModel:
             )
         )
 
-        cost = f"{round(packaging_price.wholesale_dollars, 2):.2f}" if packaging_price.wholesale_dollars else None
+        cost = (
+            f"{round(packaging_price.wholesale_dollars, 2):.2f}"
+            if packaging_price.wholesale_dollars
+            else None
+        )
 
         packaging_input = ProductVariantsBulkInput(
             compareAtPrice=None,
-            inventoryItem=InventoryItemInput(cost=cost, sku=f'AZ-{pack.code}'),
-            inventoryPolicy=ProductVariantInventoryPolicy.continue_selling,
+            inventoryItem=InventoryItemInput(cost=cost, sku=f"AZ-{pack.code}"),
+            inventoryPolicy=ProductVariantInventoryPolicy.CONTINUE_SELLING,
             optionValues=[VariantOptionValueInput(name=pack.size)],
             mediaId=packaging_media.shopify_media_id,
             price=f"{round(packaging_price.retail_dollars, 2):.2f}",

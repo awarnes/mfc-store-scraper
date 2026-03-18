@@ -1,3 +1,5 @@
+"""Shopify models for the productVariantsBulkCreate/Update mutations"""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -13,20 +15,25 @@ from src.shopify.types.models.metafield import Metafield
 
 class ProductVariantsBulkCreateStrategy(str, Enum):
     """
-    The strategy defines which behavior the mutation should observe, such as whether to keep or delete the
-    standalone variant (when product has only a single or default variant) when creating new variants in bulk.
+    The strategy defines which behavior the mutation should observe,
+    such as whether to keep or delete the standalone variant
+    (when product has only a single or default variant) when
+    creating new variants in bulk.
     """
 
-    default = "DEFAULT"
-    preserve_standalone_variant = "PRESERVE_STANDALONE_VARIANT"
-    remove_standalone_variant = "REMOVE_STANDALONE_VARIANT"
+    DEFAULT = "DEFAULT"
+    PRESERVE_STANDALONE_VARIANT = "PRESERVE_STANDALONE_VARIANT"
+    REMOVE_STANDALONE_VARIANT = "REMOVE_STANDALONE_VARIANT"
 
 
 class ProductVariantInventoryPolicy(str, Enum):
-    """Whether customers are allowed to place an order for the variant when it's out of stock. Defaults to DENY."""
+    """
+    Whether customers are allowed to place an order for the
+    variant when it's out of stock. Defaults to DENY.
+    """
 
-    continue_selling = "CONTINUE"
-    deny = "DENY"
+    CONTINUE_SELLING = "CONTINUE"
+    DENY = "DENY"
 
 
 class InventoryItemInput(BaseModel):
@@ -40,6 +47,12 @@ class InventoryItemInput(BaseModel):
 
 
 class VariantOptionValueInput(BaseModel):
+    """VariantOptionValueInput model
+
+    Generally, we won't need to add options beyond the size of the product,
+    but can use this for other option types as well
+    """
+
     optionName: str = "Size"
     name: str
 
@@ -47,7 +60,7 @@ class VariantOptionValueInput(BaseModel):
 class ProductVariantsBulkInput(BaseModel):
     """
     Product variants to be created or updated
-    see here for documentation: https://shopify.dev/docs/api/admin-graphql/latest/input-objects/ProductVariantsBulkInput
+    docs: https://shopify.dev/docs/api/admin-graphql/latest/input-objects/ProductVariantsBulkInput
     """
 
     barcode: Optional[str] = ""
@@ -63,6 +76,8 @@ class ProductVariantsBulkInput(BaseModel):
 
 
 class ProductVariantsBulkData(BaseModel):
+    """Graphql response helper model"""
+
     product: Optional[Product] = None
     productVariants: List[ProductVariant] = []
     userErrors: List[UserErrors] = []

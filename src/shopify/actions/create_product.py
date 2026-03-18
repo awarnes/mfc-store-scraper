@@ -1,11 +1,8 @@
 """Module for creating products in Shopify and saving data in the database"""
 
-from typing import List
-
-from psycopg import sql, rows
+from psycopg import sql
 
 from src.azure.azure_shopify_category_map import AZURE_SHOPIFY_CATEGORY_MAP
-from src.db.models.packaging import PackagingModel
 from src.db.models.product import ProductModel
 from src.db.postgres import Database
 from src.lib.logger import logger
@@ -16,7 +13,6 @@ from src.shopify.types.requests.product_create import (
     ProductCreateInput,
     ProductCreateResponse,
     OptionCreateInput,
-    OptionValueCreateInput,
 )
 from src.shopify.types.models.product import ProductStatus
 
@@ -40,7 +36,7 @@ def create_product(product: ProductModel) -> ProductModel:
         descriptionHtml=product.description,
         handle=product.slug,
         productType=secondary_category,
-        status=ProductStatus.draft,
+        status=ProductStatus.DRAFT,
         productOptions=[
             OptionCreateInput(
                 name="Size",

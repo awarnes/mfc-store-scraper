@@ -1,3 +1,5 @@
+"""Shopify Product model"""
+
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -26,7 +28,7 @@ class ProductStatus(str, Enum):
     docs: https://shopify.dev/docs/api/admin-graphql/latest/mutations/productCreate?language=graphql
     """
 
-    active = "ACTIVE"
-    archive = "ARCHIVE"
-    draft = "DRAFT"
-    unlisted = "UNLISTED"
+    ACTIVE = "ACTIVE"
+    ARCHIVE = "ARCHIVE"
+    DRAFT = "DRAFT"
+    UNLISTED = "UNLISTED"

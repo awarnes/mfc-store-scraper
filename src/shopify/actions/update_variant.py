@@ -1,4 +1,4 @@
-from typing import List
+"""Shopify action to update variants from the local DB"""
 
 from psycopg import rows, sql
 
@@ -8,6 +8,7 @@ from src.db.models.packaging import PackagingModel
 from src.db.models.price import PriceModel
 from src.db.models.product import ProductModel
 from src.lib.logger import logger
+from src.shopify.actions import create_media
 from src.shopify.shopify import Shopify
 from src.shopify.mutations import Mutations
 from src.shopify.types.models.metafield import Metafield
@@ -52,6 +53,9 @@ def update_variant(packaging: PackagingModel) -> PackagingModel:
         )
     )
 
+    if not packaging_media.shopify_media_id:
+        packaging_media = create_media(packaging_media)
+
     packaging_price = PriceModel.model_validate(
         db.fetchone(
             sql.SQL(
@@ -65,7 +69,7 @@ def update_variant(packaging: PackagingModel) -> PackagingModel:
     packaging_input = ProductVariantsBulkInput(
         id=packaging.shopify_variant_id,
         compareAtPrice=None,
-        inventoryPolicy=ProductVariantInventoryPolicy.continue_selling,
+        inventoryPolicy=ProductVariantInventoryPolicy.CONTINUE_SELLING,
         optionValues=[VariantOptionValueInput(name=packaging.size)],
         mediaId=packaging_media.shopify_media_id,
         price=f"{packaging_price.retail_dollars}",
@@ -83,6 +87,8 @@ def update_variant(packaging: PackagingModel) -> PackagingModel:
             "key": "id",
         },
     )
+
+    logger.debug(raw_variant_update_response)
 
     product_variants_bulk_response = ProductVariantsBulkUpdateResponse.model_validate(
         raw_variant_update_response

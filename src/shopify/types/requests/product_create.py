@@ -1,5 +1,9 @@
-from pydantic import BaseModel
+"""Shopify models for the productCreate mutation"""
+
 from typing import List, Optional
+
+
+from pydantic import BaseModel
 
 from src.shopify.types.models.product import Product, ProductStatus
 from src.shopify.types.requests.user_errors import UserErrors
@@ -17,7 +21,8 @@ class OptionValueCreateInput(BaseModel):
 
 class OptionCreateInput(BaseModel):
     """
-    A list of product options and option values. Maximum product options: three. There's no limit on the number of option values.
+    A list of product options and option values.
+    Maximum product options: three. There's no limit on the number of option values.
     """
 
     name: str
@@ -44,6 +49,8 @@ class ProductCreateInput(BaseModel):
 
 
 class ProductCreateData(BaseModel):
+    """Pydantic model helper for the productCreate mutation response"""
+
     product: Optional[Product] = {}
     userErrors: List[UserErrors]
 

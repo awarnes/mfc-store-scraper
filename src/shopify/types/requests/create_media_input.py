@@ -1,6 +1,8 @@
-from pydantic import BaseModel
+"""Shopify CreateMediaInput graphql model"""
 
 from enum import Enum
+
+from pydantic import BaseModel
 
 
 class MediaContentType(str, Enum):
@@ -8,10 +10,10 @@ class MediaContentType(str, Enum):
     The media content type.
     """
 
-    external_video = "EXTERNAL_VIDEO"
-    image = "IMAGE"
-    model_3d = "MODEL_3D"
-    video = "VIDEO"
+    EXTERNAL_VIDEO = "EXTERNAL_VIDEO"
+    IMAGE = "IMAGE"
+    MODEL_3D = "MODEL_3D"
+    VIDEO = "VIDEO"
 
 
 class CreateMediaInput(BaseModel):

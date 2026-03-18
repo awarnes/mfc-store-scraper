@@ -69,7 +69,7 @@ class ProductVariantsBulkInput(BaseModel):
     inventoryItem: Optional[InventoryItemInput] = {}
     inventoryPolicy: ProductVariantInventoryPolicy
     optionValues: List[VariantOptionValueInput]
-    mediaId: str
+    mediaId: Optional[str] = None
     price: Money
     taxable: bool = False
     metafields: List[Metafield]

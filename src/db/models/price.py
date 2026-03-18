@@ -11,8 +11,8 @@ class PriceModel(BaseModel):
 
     id: int
     packaging_code: str
-    retail_dollars: float
-    retail_unit: str
+    retail_dollars: Optional[float] = None
+    retail_unit: Optional[str] = None
     wholesale_dollars: Optional[float] = None
     wholesale_unit: Optional[str] = None
     created_at: datetime

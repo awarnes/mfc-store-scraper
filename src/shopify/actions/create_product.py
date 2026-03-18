@@ -20,6 +20,10 @@ from src.shopify.types.models.product import ProductStatus
 class ProductCreateError(Exception):
     """Generic product creation error"""
 
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
 
 def create_product(product: ProductModel) -> ProductModel:
     """Function for creating a product and adding initial size option"""
@@ -68,11 +72,11 @@ def create_product(product: ProductModel) -> ProductModel:
 
     if len(product_create_response.errors):
         logger.error(product_create_response.model_dump_json())
-        raise ProductCreateError()
+        raise ProductCreateError(message=product_create_response.model_dump_json())
 
     if len(product_create_response.data.productCreate.userErrors):
         logger.error(product_create_response.model_dump_json())
-        raise ProductCreateError()
+        raise ProductCreateError(message=product_create_response.model_dump_json())
 
     db = Database()
 

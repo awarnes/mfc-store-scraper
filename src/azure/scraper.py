@@ -122,7 +122,16 @@ class AzureScraper:
                 }
             )
 
+            sizes: List[str] = []
+
             for pack in product.get("packaging"):
+                if pack.get("size") in sizes:
+                    # We cannot have duplicate sizes for products
+                    # as it will fail to create variants in Shopify.
+                    # Generally, duplicates are for bargain-bin or in-house
+                    # tagged goods that we don't need to track anyway.
+                    continue
+
                 packaging.append(
                     {
                         "products_id": product.get("id"),
@@ -140,6 +149,8 @@ class AzureScraper:
                         "next_purchase_arrival": pack.get("next-purchase-arrival"),
                     }
                 )
+
+                sizes.append(pack.get("size"))
 
                 for image_url in pack.get("images"):
                     media.append(

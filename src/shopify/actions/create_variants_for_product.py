@@ -26,8 +26,12 @@ from src.shopify.types.requests.product_variants_bulk_input import (
 class ProductVariantCreateError(Exception):
     """Generic product variant creation error"""
 
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
 
-def create_variants_for_product(product: ProductModel) -> PackagingModel:
+
+def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
     """
     Used when a product already exists and we're adding new sizes/variants for the product
     Additionally, used during the product create process to create initial variants
@@ -53,18 +57,24 @@ def create_variants_for_product(product: ProductModel) -> PackagingModel:
             logger.debug(f"Variant already exists, skipping [{pack.model_dump_json()}]")
             continue
 
-        packaging_media = MediaModel.model_validate(
-            db.fetchone(
-                sql.SQL(
-                    """SELECT * FROM azure.media WHERE packaging_code = %(packaging_code)s"""
-                ),
-                {"packaging_code": packaging.code},
-                rows.class_row(MediaModel),
-            )
+        media = db.fetchone(
+            sql.SQL(
+                """SELECT * FROM azure.media WHERE packaging_code = %(packaging_code)s"""
+            ),
+            {"packaging_code": packaging.code},
+            rows.class_row(MediaModel),
         )
 
-        if not packaging_media.shopify_media_id:
-            packaging_media = create_media(packaging_media)
+        if media:
+            packaging_media = MediaModel.model_validate(media)
+
+            if not packaging_media.shopify_media_id:
+                packaging_media = create_media(packaging_media)
+
+            shopify_media_id = packaging_media.shopify_media_id
+        else:
+            # Not all packaging have associated media
+            shopify_media_id = None
 
         packaging_price = PriceModel.model_validate(
             db.fetchone(
@@ -75,6 +85,10 @@ def create_variants_for_product(product: ProductModel) -> PackagingModel:
                 rows.class_row(PriceModel),
             )
         )
+
+        if not packaging_price.retail_dollars:
+            logger.debug("Variant has no price, skipping...")
+            continue
 
         cost = (
             f"{round(packaging_price.wholesale_dollars, 2):.2f}"
@@ -87,7 +101,7 @@ def create_variants_for_product(product: ProductModel) -> PackagingModel:
             inventoryItem=InventoryItemInput(cost=cost, sku=f"AZ-{pack.code}"),
             inventoryPolicy=ProductVariantInventoryPolicy.CONTINUE_SELLING,
             optionValues=[VariantOptionValueInput(name=pack.size)],
-            mediaId=packaging_media.shopify_media_id,
+            mediaId=shopify_media_id,
             price=f"{round(packaging_price.retail_dollars, 2):.2f}",
             metafields=[Metafield(value=str(pack.id))],
         )
@@ -117,11 +131,15 @@ def create_variants_for_product(product: ProductModel) -> PackagingModel:
 
     if len(product_variants_bulk_response.errors):
         logger.error(product_variants_bulk_response.model_dump_json())
-        raise ProductVariantCreateError()
+        raise ProductVariantCreateError(
+            message=product_variants_bulk_response.model_dump_json()
+        )
 
     if len(product_variants_bulk_response.data.productVariantsBulkCreate.userErrors):
         logger.error(product_variants_bulk_response.model_dump_json())
-        raise ProductVariantCreateError()
+        raise ProductVariantCreateError(
+            message=product_variants_bulk_response.model_dump_json()
+        )
 
     for (
         variant

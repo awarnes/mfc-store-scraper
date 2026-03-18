@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS azure.packaging (
     next_purchase_arrival TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
-    UNIQUE(products_id, code)
+    UNIQUE(products_id, code),
+    UNIQUE(products_id, size)
 );
 
 CREATE OR REPLACE TRIGGER set_timestamp_update_packaging

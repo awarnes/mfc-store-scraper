@@ -48,7 +48,7 @@ def create_media(media_record: MediaModel) -> MediaModel:
 
         database = Database()
 
-        Database().batch_execute(
+        database.batch_execute(
             media_update_query,
             [{"id": media_record.id, "shopify_media_id": shopify_media_id}],
         )

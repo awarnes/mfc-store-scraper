@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from dataclasses import dataclass
 
+
 @dataclass
 class Mutations:
     """Class for managing GraphQL mutation files"""

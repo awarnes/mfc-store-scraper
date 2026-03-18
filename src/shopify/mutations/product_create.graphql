@@ -10,9 +10,14 @@ mutation ProductCreate($product: ProductCreateInput!){
                     id
                 }
             }
-            variants {
-                id
-                title
+            variants (first: 10) {
+                nodes {
+                    id
+                    title
+                    metafield: metafield(namespace: "internal", key: "id") {
+                        value
+                    }
+                }
             }
         }
         userErrors {

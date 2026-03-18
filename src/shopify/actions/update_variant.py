@@ -1,0 +1,99 @@
+from typing import List
+
+from psycopg import rows, sql
+
+from src.db.postgres import Database
+from src.db.models.media import MediaModel
+from src.db.models.packaging import PackagingModel
+from src.db.models.price import PriceModel
+from src.db.models.product import ProductModel
+from src.lib.logger import logger
+from src.shopify.shopify import Shopify
+from src.shopify.mutations import Mutations
+from src.shopify.types.models.metafield import Metafield
+from src.shopify.types.requests.product_variants_bulk_input import (
+    ProductVariantsBulkInput,
+    ProductVariantInventoryPolicy,
+    VariantOptionValueInput,
+    ProductVariantsBulkUpdateResponse,
+)
+
+
+class ProductVariantUpdateError(Exception):
+    """Generic product variant update error"""
+
+
+def update_variant(packaging: PackagingModel) -> PackagingModel:
+    """
+    Used to update variants at any time updates are needed for prices, stock, etc.
+    """
+
+    if not packaging.shopify_variant_id:
+        logger.debug(f"No shopify_variant_id set, cannot update [{packaging.id}]")
+        return packaging
+
+    db = Database()
+
+    product = ProductModel.model_validate(
+        db.fetchone(
+            sql.SQL("""SELECT * FROM azure.products WHERE id = %(product_id)s"""),
+            {"product_id": packaging.products_id},
+            rows.class_row(ProductModel),
+        )
+    )
+
+    packaging_media = MediaModel.model_validate(
+        db.fetchone(
+            sql.SQL(
+                """SELECT * FROM azure.media WHERE packaging_code = %(packaging_code)s"""
+            ),
+            {"packaging_code": packaging.code},
+            rows.class_row(MediaModel),
+        )
+    )
+
+    packaging_price = PriceModel.model_validate(
+        db.fetchone(
+            sql.SQL(
+                """SELECT * FROM azure.prices WHERE packaging_code = %(packaging_code)s"""
+            ),
+            {"packaging_code": packaging.code},
+            rows.class_row(PriceModel),
+        )
+    )
+
+    packaging_input = ProductVariantsBulkInput(
+        id=packaging.shopify_variant_id,
+        compareAtPrice=None,
+        inventoryPolicy=ProductVariantInventoryPolicy.continue_selling,
+        optionValues=[VariantOptionValueInput(name=packaging.size)],
+        mediaId=packaging_media.shopify_media_id,
+        price=f"{packaging_price.retail_dollars}",
+        metafields=[Metafield(value=str(packaging.id))],
+    )
+
+    shopify = Shopify()
+
+    raw_variant_update_response = shopify.query_file(
+        Mutations.product_variants_bulk_update,
+        {
+            "productId": product.shopify_product_id,
+            "variants": [packaging_input.model_dump()],
+            "namespace": "internal",
+            "key": "id",
+        },
+    )
+
+    product_variants_bulk_response = ProductVariantsBulkUpdateResponse.model_validate(
+        raw_variant_update_response
+    )
+
+    if len(product_variants_bulk_response.errors):
+        logger.error(product_variants_bulk_response.model_dump_json())
+        raise ProductVariantUpdateError()
+
+    if len(product_variants_bulk_response.data.productVariantsBulkUpdate.userErrors):
+        logger.error(product_variants_bulk_response.model_dump_json())
+        raise ProductVariantUpdateError()
+
+    return packaging

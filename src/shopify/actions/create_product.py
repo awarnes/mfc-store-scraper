@@ -1,8 +1,11 @@
 """Module for creating products in Shopify and saving data in the database"""
 
-from psycopg import sql
+from typing import List
+
+from psycopg import sql, rows
 
 from src.azure.azure_shopify_category_map import AZURE_SHOPIFY_CATEGORY_MAP
+from src.db.models.packaging import PackagingModel
 from src.db.models.product import ProductModel
 from src.db.postgres import Database
 from src.lib.logger import logger
@@ -13,14 +16,17 @@ from src.shopify.types.requests.product_create import (
     ProductCreateInput,
     ProductCreateResponse,
     OptionCreateInput,
+    OptionValueCreateInput,
 )
 from src.shopify.types.models.product import ProductStatus
+
 
 class ProductCreateError(Exception):
     """Generic product creation error"""
 
+
 def create_product(product: ProductModel) -> ProductModel:
-    """Function for creating a product, adding media, and updating variants"""
+    """Function for creating a product and adding initial size option"""
 
     if product.shopify_product_id:
         return product
@@ -35,7 +41,11 @@ def create_product(product: ProductModel) -> ProductModel:
         handle=product.slug,
         productType=secondary_category,
         status=ProductStatus.draft,
-        productOptions=[OptionCreateInput(name="Size")],
+        productOptions=[
+            OptionCreateInput(
+                name="Size",
+            )
+        ],
         tags=[
             primary_category,
             secondary_category,
@@ -46,12 +56,18 @@ def create_product(product: ProductModel) -> ProductModel:
         metafields=[Metafield(value=str(product.id))],
     )
 
+    logger.debug(f"create_input: {create_input.model_dump_json()}")
+
     shopify = Shopify()
 
+    raw_product_create_response = shopify.query_file(
+        Mutations.product_create, {"product": create_input.model_dump()}
+    )
+
+    logger.debug(f"raw_product_create_response: {raw_product_create_response}")
+
     product_create_response = ProductCreateResponse.model_validate(
-        shopify.query_file(
-            Mutations.product_create, {"product": create_input.model_dump()}
-        )
+        raw_product_create_response
     )
 
     if len(product_create_response.errors):
@@ -64,6 +80,8 @@ def create_product(product: ProductModel) -> ProductModel:
 
     db = Database()
 
+    shopify_product_id = product_create_response.data.productCreate.product.id
+
     db.batch_execute(
         sql.SQL("""
             UPDATE azure.products
@@ -73,11 +91,11 @@ def create_product(product: ProductModel) -> ProductModel:
         [
             {
                 "product_id": product.id,
-                "shopify_product_id": product_create_response.data.productCreate.product.id,
+                "shopify_product_id": shopify_product_id,
             }
         ],
     )
 
-    product.shopify_product_id = product_create_response.data.productCreate.product.id
+    product.shopify_product_id = shopify_product_id
 
     return product

@@ -4,7 +4,7 @@ mutation productVariantsBulkCreate(
     $namespace: String!,
     $key: String!
 ) {
-    productVariantsBulkCreate(productId: $productId, variants: $variants) {
+    productVariantsBulkCreate(productId: $productId, variants: $variants, strategy: REMOVE_STANDALONE_VARIANT) {
         product {
             id
         }

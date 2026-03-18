@@ -8,14 +8,11 @@ mutation productVariantsBulkUpdate(
         }
         productVariants {
             id
-            metafields(first: 2) {
-                edges {
-                    node {
-                        namespace
-                        key
-                        value
-                    }
-                }
+            metafield: metafield(namespace: $namespace, key: $key) {
+                namespace
+                key
+                type
+                value
             }
         }
         userErrors {

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from dataclasses import dataclass
 
+
 @dataclass
 class Queries:
     """Class for managing GraphQL query files"""
@@ -16,6 +17,6 @@ class Queries:
     current_app_installation = Path(
         os.path.join(_query_directory, "current_app_installation.graphql")
     ).read_text(encoding="utf-8")
-    get_products = Path(
-        os.path.join(_query_directory, "get_products.graphql")
-    ).read_text(encoding="utf-8")
+    get_product = Path(os.path.join(_query_directory, "get_product.graphql")).read_text(
+        encoding="utf-8"
+    )

@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS ltree;
 
-  -- TABLE DEFINITIONS
+-- TABLE DEFINITIONS
 -- Patch History Table
 CREATE TABLE IF NOT EXISTS public.patch_history (
     filename TEXT PRIMARY KEY,
@@ -20,6 +20,7 @@ CREATE SCHEMA IF NOT EXISTS azure;
 
 CREATE TABLE IF NOT EXISTS azure.products (
     id INTEGER PRIMARY KEY NOT NULL,
+    shopify_product_id TEXT,
     name TEXT,
     short_description TEXT,
     description TEXT,
@@ -39,13 +40,13 @@ FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TABLE IF NOT EXISTS azure.packaging (
-    id SERIAL,
+    id SERIAL PRIMARY KEY,
     products_id INTEGER NOT NULL,
     code TEXT,
+    shopify_variant_id TEXT,
     size TEXT,
     weight JSONB,
     stock INTEGER DEFAULT 0,
-    images JSONB,
     rewards_enabled BOOLEAN DEFAULT FALSE,
     freight_handling_required BOOLEAN DEFAULT FALSE,
     tags JSONB,
@@ -63,7 +64,7 @@ FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TABLE IF NOT EXISTS azure.prices (
-    id SERIAL,
+    id SERIAL PRIMARY KEY,
     packaging_code TEXT NOT NULL,
     retail_dollars REAL,
     retail_unit TEXT,
@@ -72,7 +73,17 @@ CREATE TABLE IF NOT EXISTS azure.prices (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE OR REPLACE TRIGGER set_timestamp_update_prices
-BEFORE UPDATE ON azure.prices
+CREATE TABLE IF NOT EXISTS azure.media (
+    id SERIAL PRIMARY KEY,
+    packaging_code TEXT NOT NULL,
+    original_url TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    shopify_media_id TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE OR REPLACE TRIGGER set_timestamp_update_media
+BEFORE UPDATE ON azure.media
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();

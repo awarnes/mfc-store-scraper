@@ -1,20 +1,21 @@
-'''
+"""
 File to store all constant values used in the project
 
 Generally should be sorted/organized by use case
-'''
+"""
+
 PRODUCT_PAGE_SEARCH_SIZE: int = 25
 
-SHOPIFY_STATUS_ACTIVE: str = 'active'
-SHOPIFY_STATUS_DRAFT: str = 'draft'
+SHOPIFY_STATUS_ACTIVE: str = "active"
+SHOPIFY_STATUS_DRAFT: str = "draft"
 SHOPIFY_IGNORE_WEIGHT: int = 0
 SHOPIFY_IS_ONLINE_STORE: bool = True
 
-SHOPIFY_VARIANT_FULFILLMENT_SERVICE_MANUAL: str = 'manual'
-SHOPIFY_VARIANT_INVENTORY_POLICY_CONTINUE: str = 'continue'
-SHOPIFY_VARIANT_INVENTORY_POLICY_DENY: str = 'deny'
-SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY: str = 'shopify'
-SHOPIFY_CUSTOM_TYPE_INDIVIDUAL_SIZE_PRODUCT: str = 'Individual Size'
+SHOPIFY_VARIANT_FULFILLMENT_SERVICE_MANUAL: str = "manual"
+SHOPIFY_VARIANT_INVENTORY_POLICY_CONTINUE: str = "continue"
+SHOPIFY_VARIANT_INVENTORY_POLICY_DENY: str = "deny"
+SHOPIFY_VARIANT_INVENTORY_TRACKER_SHOPIFY: str = "shopify"
+SHOPIFY_CUSTOM_TYPE_INDIVIDUAL_SIZE_PRODUCT: str = "Individual Size"
 
 SHOPIFY_CSV_FIELD_NAMES = {
     "handle": "Handle",
@@ -65,7 +66,7 @@ SHOPIFY_CSV_FIELD_NAMES = {
     "cost_per_item": "Cost per item",
     "status": "Status",
     "standard_product_type": "Standard Product Type",
-    "custom_product_type": "Custom Product Type"
+    "custom_product_type": "Custom Product Type",
 }
 
 SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY = {
@@ -74,5 +75,5 @@ SHOPIFY_CSV_FIELD_NAMES_PRICE_UPDATE_ONLY = {
     "tags": "Tags",
     "option1_name": "Option1 Name",
     "option1_value": "Option1 Value",
-    "variant_price": "Variant Price"
+    "variant_price": "Variant Price",
 }

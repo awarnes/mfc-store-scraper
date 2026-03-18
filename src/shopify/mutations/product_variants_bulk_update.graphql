@@ -1,0 +1,23 @@
+mutation productVariantsBulkUpdate(
+    $productId: ID!
+    $variants: [ProductVariantsBulkInput!]!
+) {
+    productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+        product {
+            id
+        }
+        productVariants {
+            id
+            metafield: metafield(namespace: $namespace, key: $key) {
+                namespace
+                key
+                type
+                value
+            }
+        }
+        userErrors {
+            field
+            message
+        }
+    }
+}

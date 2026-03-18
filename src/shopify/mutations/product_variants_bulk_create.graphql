@@ -1,0 +1,25 @@
+mutation productVariantsBulkCreate(
+    $productId: ID!
+    $variants: [ProductVariantsBulkInput!]!
+    $namespace: String!,
+    $key: String!
+) {
+    productVariantsBulkCreate(productId: $productId, variants: $variants, strategy: REMOVE_STANDALONE_VARIANT) {
+        product {
+            id
+        }
+        productVariants {
+            id
+            metafield: metafield(namespace: $namespace, key: $key) {
+                namespace
+                key
+                type
+                value
+            }
+        }
+        userErrors {
+            field
+            message
+        }
+    }
+}

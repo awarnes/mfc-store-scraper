@@ -10,10 +10,17 @@ from src.shopify.mutations import Mutations
 
 class MediaDownloadFailedError(Exception):
     """Error thrown when a media download fails"""
-
+    
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
 
 class StagedUploadFailedError(Exception):
     """Error thrown when a staged upload fails"""
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
 
 
 class MediaManager:

@@ -17,6 +17,7 @@ if env:
     env_files.append(str(BASE_DIR / f".env.{env}"))
 env_files.extend([str(BASE_DIR / ".env.local"), str(BASE_DIR / ".env")])
 
+
 class Settings(BaseSettings):
     """Application settings loaded from environment files."""
 
@@ -46,6 +47,9 @@ class Settings(BaseSettings):
 
     # Top level categories (parsed from JSON string in env)
     top_level_categories: dict[str, int] = {}
+
+    shopify_client_id: str
+    shopify_client_secret: str
 
     @field_validator("top_level_categories", mode="before")
     @classmethod

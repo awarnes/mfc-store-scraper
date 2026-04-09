@@ -1,0 +1,20 @@
+query getProduct($productId: ID) {
+    product(id: $productId) {
+        id
+        title
+        options(first: 1) {
+            id
+            name
+            values
+        }
+        variants (first: 10) {
+            nodes {
+                id
+                title
+                metafield: metafield(namespace: "internal", key: "id") {
+                    value
+                }
+            }
+        }
+    }
+}

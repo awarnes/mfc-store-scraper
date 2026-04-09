@@ -1,0 +1,164 @@
+"""Shopify action to create variants for a given product from the local DB"""
+
+from typing import List
+
+from psycopg import rows, sql
+
+from src.db.postgres import Database
+from src.db.models.media import MediaModel
+from src.db.models.packaging import PackagingModel
+from src.db.models.price import PriceModel
+from src.db.models.product import ProductModel
+from src.lib.logger import logger
+from src.shopify.actions import create_media
+from src.shopify.shopify import Shopify
+from src.shopify.mutations import Mutations
+from src.shopify.types.models.metafield import Metafield
+from src.shopify.types.requests.product_variants_bulk_input import (
+    ProductVariantsBulkInput,
+    ProductVariantInventoryPolicy,
+    InventoryItemInput,
+    VariantOptionValueInput,
+    ProductVariantsBulkCreateResponse,
+)
+
+
+class ProductVariantCreateError(Exception):
+    """Generic product variant creation error"""
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
+def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
+    """
+    Used when a product already exists and we're adding new sizes/variants for the product
+    Additionally, used during the product create process to create initial variants
+    """
+
+    db = Database()
+    product_packaging: List[PackagingModel] = db.fetchall(
+        sql.SQL("""SELECT * FROM azure.packaging WHERE products_id = %(product_id)s"""),
+        {"product_id": product.id},
+        rows.class_row(PackagingModel),
+    )
+
+    sorted_packaging: List[PackagingModel] = sorted(
+        product_packaging, key=lambda pack: pack.weight["net"]
+    )
+
+    variant_input: List[ProductVariantsBulkInput] = []
+
+    for pack in sorted_packaging:
+        packaging = PackagingModel.model_validate(pack)
+
+        if packaging.shopify_variant_id:
+            logger.debug(f"Variant already exists, skipping [{pack.model_dump_json()}]")
+            continue
+        
+        # TODO: we'll come back to this, create_media just
+        # takes too long when we're uploading everything
+        shopify_media_id = None
+        # media = db.fetchone(
+        #     sql.SQL(
+        #         """SELECT * FROM azure.media WHERE packaging_code = %(packaging_code)s"""
+        #     ),
+        #     {"packaging_code": packaging.code},
+        #     rows.class_row(MediaModel),
+        # )
+
+        # if media:
+        #     packaging_media = MediaModel.model_validate(media)
+
+        #     if not packaging_media.shopify_media_id:
+        #         packaging_media = create_media(packaging_media)
+
+        #     shopify_media_id = packaging_media.shopify_media_id
+        # else:
+        #     # Not all packaging have associated media
+        #     shopify_media_id = None
+
+        packaging_price = PriceModel.model_validate(
+            db.fetchone(
+                sql.SQL(
+                    """SELECT * FROM azure.prices WHERE packaging_code = %(packaging_code)s"""
+                ),
+                {"packaging_code": packaging.code},
+                rows.class_row(PriceModel),
+            )
+        )
+
+        if not packaging_price.retail_dollars:
+            logger.debug("Variant has no price, skipping...")
+            continue
+
+        cost = (
+            f"{round(packaging_price.wholesale_dollars, 2):.2f}"
+            if packaging_price.wholesale_dollars
+            else None
+        )
+
+        packaging_input = ProductVariantsBulkInput(
+            compareAtPrice=None,
+            inventoryItem=InventoryItemInput(cost=cost, sku=f"AZ-{pack.code}"),
+            inventoryPolicy=ProductVariantInventoryPolicy.CONTINUE_SELLING,
+            optionValues=[VariantOptionValueInput(name=pack.size)],
+            mediaId=shopify_media_id,
+            price=f"{round(packaging_price.retail_dollars, 2):.2f}",
+            metafields=[Metafield(value=str(pack.id))],
+        )
+
+        # Remove the ID field before creation
+        del packaging_input.id
+
+        variant_input.append(packaging_input.model_dump())
+
+    shopify = Shopify()
+
+    raw_variant_create_response = shopify.query_file(
+        Mutations.product_variants_bulk_create,
+        {
+            "productId": product.shopify_product_id,
+            "variants": variant_input,
+            "namespace": "internal",
+            "key": "id",
+        },
+    )
+
+    logger.debug(raw_variant_create_response)
+
+    product_variants_bulk_response = ProductVariantsBulkCreateResponse.model_validate(
+        raw_variant_create_response
+    )
+
+    if len(product_variants_bulk_response.errors):
+        logger.error(product_variants_bulk_response.model_dump_json())
+        raise ProductVariantCreateError(
+            message=product_variants_bulk_response.model_dump_json()
+        )
+
+    if len(product_variants_bulk_response.data.productVariantsBulkCreate.userErrors):
+        logger.error(product_variants_bulk_response.model_dump_json())
+        raise ProductVariantCreateError(
+            message=product_variants_bulk_response.model_dump_json()
+        )
+
+    for (
+        variant
+    ) in product_variants_bulk_response.data.productVariantsBulkCreate.productVariants:
+        db.batch_execute(
+            sql.SQL("""
+                UPDATE azure.packaging
+                SET shopify_variant_id = %(shopify_variant_id)s
+                WHERE id = %(packaging_id)s
+            """),
+            [
+                {
+                    "packaging_id": int(variant.metafield.value),
+                    "shopify_variant_id": variant.id,
+                }
+            ],
+        )
+
+    return sorted_packaging

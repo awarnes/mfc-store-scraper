@@ -1,0 +1,28 @@
+mutation ProductCreate($product: ProductCreateInput!){
+    productCreate(
+        product: $product
+    ) {
+        product {
+            id
+            options {
+                id
+                optionValues {
+                    id
+                }
+            }
+            variants (first: 10) {
+                nodes {
+                    id
+                    title
+                    metafield: metafield(namespace: "internal", key: "id") {
+                        value
+                    }
+                }
+            }
+        }
+        userErrors {
+            field
+            message
+        }
+    }
+}

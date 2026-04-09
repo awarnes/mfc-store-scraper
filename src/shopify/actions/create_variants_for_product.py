@@ -56,25 +56,28 @@ def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
         if packaging.shopify_variant_id:
             logger.debug(f"Variant already exists, skipping [{pack.model_dump_json()}]")
             continue
+        
+        # TODO: we'll come back to this, create_media just
+        # takes too long when we're uploading everything
+        shopify_media_id = None
+        # media = db.fetchone(
+        #     sql.SQL(
+        #         """SELECT * FROM azure.media WHERE packaging_code = %(packaging_code)s"""
+        #     ),
+        #     {"packaging_code": packaging.code},
+        #     rows.class_row(MediaModel),
+        # )
 
-        media = db.fetchone(
-            sql.SQL(
-                """SELECT * FROM azure.media WHERE packaging_code = %(packaging_code)s"""
-            ),
-            {"packaging_code": packaging.code},
-            rows.class_row(MediaModel),
-        )
+        # if media:
+        #     packaging_media = MediaModel.model_validate(media)
 
-        if media:
-            packaging_media = MediaModel.model_validate(media)
+        #     if not packaging_media.shopify_media_id:
+        #         packaging_media = create_media(packaging_media)
 
-            if not packaging_media.shopify_media_id:
-                packaging_media = create_media(packaging_media)
-
-            shopify_media_id = packaging_media.shopify_media_id
-        else:
-            # Not all packaging have associated media
-            shopify_media_id = None
+        #     shopify_media_id = packaging_media.shopify_media_id
+        # else:
+        #     # Not all packaging have associated media
+        #     shopify_media_id = None
 
         packaging_price = PriceModel.model_validate(
             db.fetchone(

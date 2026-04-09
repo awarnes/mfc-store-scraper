@@ -22,23 +22,22 @@ def sync_to_shopify():
     database = Database()
 
     products: List[ProductModel] = database.fetchall(
-        sql.SQL("SELECT * FROM azure.products;"),
+        sql.SQL("SELECT * FROM azure.products WHERE shopify_product_id IS NULL;"),
         {},
         rows.class_row(ProductModel),
     )
-
-    with Progress(
-        SpinnerColumn(),
-        *Progress.get_default_columns(),
-        MofNCompleteColumn(),
-        TimeElapsedColumn(),
-    ) as progress:
-        task = progress.add_task(
-            f"Syncing {len(products)} products...", total=len(products)
-        )
-
-        failed_products: List[tuple[ProductModel, str]] = []
-        try: 
+    failed_products: List[tuple[ProductModel, str]] = []
+    try: 
+        with Progress(
+            SpinnerColumn(),
+            *Progress.get_default_columns(),
+            MofNCompleteColumn(),
+            TimeElapsedColumn(),
+        ) as progress:
+            task = progress.add_task(
+                f"Syncing {len(products)} products...", total=len(products)
+            )
+            
             for product in products:
                 if product.shopify_product_id:
                     progress.console.print("Product exists, skipping...")
@@ -53,8 +52,6 @@ def sync_to_shopify():
                     failed_products.append((product, f"product error {err.message}"))
                     continue
 
-                # logger.debug(created_product)
-
                 try:
                     created_variants = create_variants_for_product(created_product)
                 except ProductVariantCreateError as err:
@@ -66,10 +63,8 @@ def sync_to_shopify():
                 except Exception as err:
                     failed_products.append((product, f"unknown error {err}"))
 
-                # logger.debug(created_variants)
-
                 progress.advance(task)
-        finally:
-            with open('errors.json', 'w+', encoding='utf-8') as f:
-                logger.error(json.dumps(failed_products))
-                f.write(json.dumps(failed_products))
+    finally:
+        with open('errors.json', 'w+', encoding='utf-8') as f:
+            logger.error(json.dumps(failed_products))
+            f.write(json.dumps(failed_products))

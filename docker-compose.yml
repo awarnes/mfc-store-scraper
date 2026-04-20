@@ -5,6 +5,8 @@ services:
     volumes:
       - azure:/var/lib/postgresql/data/
       - ./src/db/base_schema.sql:/docker-entrypoint-initdb.d/01-base_schema.sql:ro
+      - ./src/db/coop_schema.sql:/docker-entrypoint-initdb.d/02-coop_schema.sql:ro
+      - ./src/db/mock_data.sql:/docker-entrypoint-initdb.d/03-mock_data.sql:ro
     ports:
       - "5999:5432"
     env_file:

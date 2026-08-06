@@ -56,7 +56,7 @@ def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
         if packaging.shopify_variant_id:
             logger.debug(f"Variant already exists, skipping [{pack.model_dump_json()}]")
             continue
-        
+
         # TODO: we'll come back to this, create_media just
         # takes too long when we're uploading everything
         shopify_media_id = None
@@ -150,7 +150,9 @@ def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
         db.batch_execute(
             sql.SQL("""
                 UPDATE azure.packaging
-                SET shopify_variant_id = %(shopify_variant_id)s
+                SET
+                    shopify_variant_id = %(shopify_variant_id)s,
+                    shopify_updated_at = now()
                 WHERE id = %(packaging_id)s
             """),
             [

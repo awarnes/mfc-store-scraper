@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS azure.products (
     brand JSONB,
     substitutions JSONB,
     category ltree,
+    shopify_updated_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS azure.packaging (
     primary_category INTEGER,
     favorites INTEGER,
     next_purchase_arrival TIMESTAMPTZ,
+    shopify_updated_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     UNIQUE(products_id, code),
@@ -80,6 +82,7 @@ CREATE TABLE IF NOT EXISTS azure.media (
     original_url TEXT NOT NULL,
     file_name TEXT NOT NULL,
     shopify_media_id TEXT,
+    shopify_updated_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );

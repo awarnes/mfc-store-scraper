@@ -13,6 +13,7 @@ from src.shopify.actions import (
     create_media,
 )
 
+
 def create_media_in_shopify():
     logger.info("Creating media to Shopify....")
     database = Database()
@@ -29,12 +30,10 @@ def create_media_in_shopify():
         MofNCompleteColumn(),
         TimeElapsedColumn(),
     ) as progress:
-        task = progress.add_task(
-            f"Syncing {len(media)} products...", total=len(media)
-        )
+        task = progress.add_task(f"Syncing {len(media)} products...", total=len(media))
 
         failed_products: List[tuple[MediaModel, str]] = []
-        try: 
+        try:
             for image in media:
                 if image.shopify_media_id:
                     progress.console.print("Media exists, skipping...")
@@ -50,6 +49,6 @@ def create_media_in_shopify():
 
                 progress.advance(task)
         finally:
-            with open('errors.json', 'w+', encoding='utf-8') as f:
+            with open("errors.json", "w+", encoding="utf-8") as f:
                 logger.error(json.dumps(failed_products))
                 f.write(json.dumps(failed_products))

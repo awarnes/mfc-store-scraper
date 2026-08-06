@@ -6,7 +6,7 @@ from .create_variants_for_product import (
     create_variants_for_product,
     ProductVariantCreateError,
 )
-from .update_variant import update_variant
+from .update_variant import update_variant, ProductVariantUpdateError
 
 __all__ = [
     "create_media",
@@ -15,4 +15,5 @@ __all__ = [
     "create_variants_for_product",
     "ProductVariantCreateError",
     "update_variant",
+    "ProductVariantUpdateError",
 ]

@@ -1,6 +1,7 @@
 """Pydantic model for the `azure.products` table"""
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, JsonValue
 
@@ -19,5 +20,6 @@ class ProductModel(BaseModel):
     brand: JsonValue
     substitutions: JsonValue
     category: str
+    shopify_updated_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime

@@ -85,7 +85,9 @@ def create_product(product: ProductModel) -> ProductModel:
     db.batch_execute(
         sql.SQL("""
             UPDATE azure.products
-            SET shopify_product_id = %(shopify_product_id)s
+            SET
+                shopify_product_id = %(shopify_product_id)s,
+                shopify_updated_at = now()
             WHERE id = %(product_id)s;
         """),
         [

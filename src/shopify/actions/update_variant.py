@@ -3,7 +3,6 @@
 from psycopg import rows, sql
 
 from src.db.postgres import Database
-from src.db.models.media import MediaModel
 from src.db.models.packaging import PackagingModel
 from src.db.models.price import PriceModel
 from src.db.models.product import ProductModel
@@ -37,29 +36,32 @@ def update_variant(packaging: PackagingModel) -> PackagingModel:
 
     product = ProductModel.model_validate(
         db.fetchone(
-            sql.SQL("""SELECT * FROM azure.products WHERE id = %(product_id)s"""),
+            sql.SQL(
+                """SELECT * FROM azure.products WHERE id = %(product_id)s LIMIT 1;"""
+            ),
             {"product_id": packaging.products_id},
             rows.class_row(ProductModel),
         )
     )
 
-    packaging_media = MediaModel.model_validate(
-        db.fetchone(
-            sql.SQL(
-                """SELECT * FROM azure.media WHERE packaging_code = %(packaging_code)s"""
-            ),
-            {"packaging_code": packaging.code},
-            rows.class_row(MediaModel),
-        )
-    )
+    # packaging_media = MediaModel.model_validate(
+    #     db.fetchone(
+    #         sql.SQL(
+    #             """SELECT * FROM azure.media WHERE packaging_code = %(packaging_code)s LIMIT 1;"""
+    #         ),
+    #         {"packaging_code": packaging.code},
+    #         rows.class_row(MediaModel),
+    #     )
+    # )
 
-    if not packaging_media.shopify_media_id:
-        packaging_media = create_media(packaging_media)
+    # if not packaging_media.shopify_media_id:
+    #     packaging_media = create_media(packaging_media)
 
+    # Get the most recent price set for variant
     packaging_price = PriceModel.model_validate(
         db.fetchone(
             sql.SQL(
-                """SELECT * FROM azure.prices WHERE packaging_code = %(packaging_code)s"""
+                """SELECT * FROM azure.prices WHERE packaging_code = %(packaging_code)s ORDER BY created_at DESC LIMIT 1;"""
             ),
             {"packaging_code": packaging.code},
             rows.class_row(PriceModel),
@@ -71,8 +73,8 @@ def update_variant(packaging: PackagingModel) -> PackagingModel:
         compareAtPrice=None,
         inventoryPolicy=ProductVariantInventoryPolicy.CONTINUE_SELLING,
         optionValues=[VariantOptionValueInput(name=packaging.size)],
-        mediaId=packaging_media.shopify_media_id,
-        price=f"{packaging_price.retail_dollars}",
+        mediaId=None,
+        price=f"{packaging_price.retail_dollars * 1.1:.2f}",
         metafields=[Metafield(value=str(packaging.id))],
     )
 
@@ -88,7 +90,7 @@ def update_variant(packaging: PackagingModel) -> PackagingModel:
         },
     )
 
-    logger.debug(raw_variant_update_response)
+    logger.info(raw_variant_update_response)
 
     product_variants_bulk_response = ProductVariantsBulkUpdateResponse.model_validate(
         raw_variant_update_response
@@ -101,5 +103,15 @@ def update_variant(packaging: PackagingModel) -> PackagingModel:
     if len(product_variants_bulk_response.data.productVariantsBulkUpdate.userErrors):
         logger.error(product_variants_bulk_response.model_dump_json())
         raise ProductVariantUpdateError()
+
+    db.batch_execute(
+        sql.SQL("""
+            UPDATE azure.packaging
+            SET
+                shopify_updated_at = now()
+            WHERE id = %(packaging_id)s
+        """),
+        [{"packaging_id": packaging.id}],
+    )
 
     return packaging

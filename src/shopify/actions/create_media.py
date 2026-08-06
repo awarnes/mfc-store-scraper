@@ -7,7 +7,7 @@ from psycopg import rows, sql
 from src.db.models.media import MediaModel
 from src.db.postgres import Database
 from src.lib.logger import logger
-from src.shopify.media_manager import MediaManager
+from src.shopify.media_manager import MediaManager, MediaDownloadFailedError
 
 
 def create_media(media_record: MediaModel) -> MediaModel:
@@ -20,9 +20,14 @@ def create_media(media_record: MediaModel) -> MediaModel:
     media_manager = MediaManager()
 
     with TemporaryDirectory() as tmpdir:
-        path = media_manager.download(
-            media_record.file_name, media_record.original_url, tmpdir
-        )
+        try:
+            path = media_manager.download(
+                media_record.file_name, media_record.original_url, tmpdir
+            )
+        except MediaDownloadFailedError as err:
+            if err.code == 404:
+                logger.info(f'Failed to find media {media_record.id}, skipping...')
+                return None
 
         staged_response = media_manager.generate_staged_upload(media_record.file_name)
 
@@ -42,7 +47,9 @@ def create_media(media_record: MediaModel) -> MediaModel:
 
         media_update_query = sql.SQL("""
             UPDATE azure.media
-            SET shopify_media_id = %(shopify_media_id)s
+            SET
+                shopify_media_id = %(shopify_media_id)s,
+                shopify_updated_at = now()
             WHERE id = %(id)s;
         """)
 
@@ -50,7 +57,12 @@ def create_media(media_record: MediaModel) -> MediaModel:
 
         database.batch_execute(
             media_update_query,
-            [{"id": media_record.id, "shopify_media_id": shopify_media_id}],
+            [
+                {
+                    "id": media_record.id,
+                    "shopify_media_id": shopify_media_id,
+                }
+            ],
         )
 
         return database.fetchone(

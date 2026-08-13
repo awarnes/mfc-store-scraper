@@ -1,0 +1,5 @@
+query PrimaryLocation {
+  locations(first: 1) {
+    nodes { id }
+  }
+}

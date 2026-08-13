@@ -58,7 +58,7 @@ def get_products_from_azure():
         """
         INSERT INTO azure.packaging (products_id, code, size, weight, stock, rewards_enabled, freight_handling_required, tags, primary_category,favorites,next_purchase_arrival)
         VALUES (%(products_id)s,%(code)s,%(size)s,%(weight)s,%(stock)s,%(rewards_enabled)s,%(freight_handling_required)s,%(tags)s,%(primary_category)s,%(favorites)s,%(next_purchase_arrival)s)
-        ON CONFLICT(products_id, code)
+        ON CONFLICT(code)
         DO UPDATE SET
             size = EXCLUDED.size,
             weight = EXCLUDED.weight,
@@ -81,8 +81,22 @@ def get_products_from_azure():
     prices_query = sql.SQL(
         """
         INSERT INTO azure.prices (packaging_code, retail_dollars, retail_unit, wholesale_dollars, wholesale_unit)
-        VALUES (%(packaging_code)s,%(retail_dollars)s,%(retail_unit)s,%(wholesale_dollars)s,%(wholesale_unit)s);
-    """
+        SELECT %(packaging_code)s, %(retail_dollars)s, %(retail_unit)s, %(wholesale_dollars)s, %(wholesale_unit)s
+        FROM (SELECT DISTINCT code FROM azure.packaging) p
+        WHERE p.code = %(packaging_code)s
+        AND (
+            SELECT (retail_dollars, retail_unit, wholesale_dollars, wholesale_unit)
+            FROM azure.prices
+            WHERE packaging_code = %(packaging_code)s
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) IS DISTINCT FROM (
+            %(retail_dollars)s::real,
+            %(retail_unit)s::text,
+            %(wholesale_dollars)s::real,
+            %(wholesale_unit)s::text
+        );
+        """
     )
 
     logger.info("Inserting prices...")
@@ -92,8 +106,9 @@ def get_products_from_azure():
     media_query = sql.SQL(
         """
         INSERT INTO azure.media (packaging_code, original_url, file_name)
-        VALUES (%(packaging_code)s,%(original_url)s, %(file_name)s);
-    """
+        VALUES (%(packaging_code)s, %(original_url)s, %(file_name)s)
+        ON CONFLICT (packaging_code, original_url) DO NOTHING;
+        """
     )
 
     logger.info("Inserting media...")

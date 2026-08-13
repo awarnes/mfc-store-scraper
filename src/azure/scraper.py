@@ -81,13 +81,12 @@ class AzureScraper:
     def get_all_products(self):
         """Get all Azure products"""
         hits = []
+        seen_ids = set()
         for category in self.get_d1_categories():
             page = 0
             num_pages = 1
             while page < num_pages:
                 category_id = category.get("id")
-                # seems like they all just have one ancestor, adding that to the category
-                # pylint: disable=line-too-long
                 category_name = f"{category.get('ancestors', {'slug': 'Root'})[0].get('slug')}.{category.get('slug')}"
 
                 resp = self.get_products_for_category(category_id, page)
@@ -95,11 +94,17 @@ class AzureScraper:
                     print(f"More than 2k products in category: {category_id}")
                 _hits = resp.get("hits")
 
-                ## make sure that each product has its category name
                 for hit in _hits:
+                    if hit.get("id") in seen_ids:
+                        ## this is preventing duplicates from products that exist in more than one category (many)
+                        ## that means we are missing categories for a product so we may want to think about a way to
+                        ## aggregate the categories here in the futre
+                        ## print(f"We have already seen this one: {category_name}/{hit.get('name')}")
+                        continue
+                    seen_ids.add(hit.get("id"))
                     hit["category"] = category_name
+                    hits.append(hit)
 
-                hits += _hits
                 num_pages = resp.get("nbPages")
                 page += 1
 
@@ -127,7 +132,7 @@ class AzureScraper:
                     "name": product.get("name"),
                     "short_description": product.get("shortDescription"),
                     "description": product.get("description"),
-                    "slug": product.get("slug"),
+                    "slug": f"{product.get("slug")}-azure-{product.get("id")}",
                     "storage_climate": product.get("storageClimate"),
                     "unshippable_regions": Jsonb(product.get("unshippableRegions")),
                     "brand": Jsonb(product.get("brand")),

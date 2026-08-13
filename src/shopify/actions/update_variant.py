@@ -2,7 +2,7 @@
 
 from psycopg import rows, sql
 
-from src.db.postgres import Database
+from src.db.postgres import Database, MARKUP_PERCENTAGE
 from src.db.models.packaging import PackagingModel
 from src.db.models.price import PriceModel
 from src.db.models.product import ProductModel
@@ -17,7 +17,6 @@ from src.shopify.types.requests.product_variants_bulk_input import (
     VariantOptionValueInput,
     ProductVariantsBulkUpdateResponse,
 )
-
 
 class ProductVariantUpdateError(Exception):
     """Generic product variant update error"""
@@ -74,7 +73,7 @@ def update_variant(packaging: PackagingModel) -> PackagingModel:
         inventoryPolicy=ProductVariantInventoryPolicy.CONTINUE_SELLING,
         optionValues=[VariantOptionValueInput(name=packaging.size)],
         mediaId=None,
-        price=f"{packaging_price.retail_dollars * 1.1:.2f}",
+        price=f"{packaging_price.retail_dollars / (1 - (MARKUP_PERCENTAGE/100)):.2f}",
         metafields=[Metafield(value=str(packaging.id))],
     )
 

@@ -6,50 +6,34 @@ import typer
 from src.db.postgres import Database
 from src.db.models.media import MediaModel
 
-from .sync_to_shopify import sync_to_shopify
 from .get_products_from_azure import get_products_from_azure
-from .create_media_in_shopify import create_media_in_shopify
-from .update_packaging import update_packaging
 from .upload_images import upload_images
 
 app = typer.Typer()
 
 
 @app.command()
-def shopify_sync():
-    sync_to_shopify()
-
-
-@app.command()
-def create_media():
-    create_media_in_shopify()
-
-
-@app.command()
 def scrape():
+    """Scrape all products from Azure Standard into the DB."""
     get_products_from_azure()
-
-
-@app.command()
-def update_variants():
-    update_packaging()
 
 
 @app.command()
 def upload_remaining_images():
     database = Database()
 
-    media: MediaModel = database.fetchall(
+    media = database.fetchall(
         sql.SQL(
             """
-                select * from (select distinct on (m.packaging_code)
-                    m.* from azure.media as m
-                join azure.packaging as pack on pack.code = m.packaging_code 
-                join azure.products as p on p.id = pack.products_id
-                where
-                    p.shopify_product_id is not null and
-                    pack.shopify_variant_id is not null
-                order by m.packaging_code, m.shopify_media_id) where shopify_media_id is null limit 10;
+            select * from (select distinct on (m.packaging_code)
+                m.* from azure.media as m
+            join azure.packaging as pack on pack.code = m.packaging_code
+            join azure.products as p on p.id = pack.products_id
+            where
+                p.shopify_product_id is not null and
+                pack.shopify_variant_id is not null
+            order by m.packaging_code, m.shopify_media_id)
+            where shopify_media_id is null limit 10;
             """
         ),
         {},
@@ -57,13 +41,10 @@ def upload_remaining_images():
     )
 
     number_of_images = len(media)
-    print(len(media))
+    print(number_of_images)
     with Pool(processes=7) as pool:
         for index, _ in enumerate(pool.imap_unordered(upload_images, media), 1):
             print(f"\rdone: {index / number_of_images:%}")
 
-
-if __name__ == "__main__":
-    app()
 
 __all__ = ["app"]

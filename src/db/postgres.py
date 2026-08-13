@@ -4,6 +4,8 @@ import psycopg
 
 from src.settings import settings
 
+## make sure this is a percentage
+MARKUP_PERCENTAGE = 15
 
 class Database:
     """Connection helper for the PostgreSQL database"""

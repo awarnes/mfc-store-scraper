@@ -1,0 +1,5 @@
+mutation InventorySetOnHand($input: InventorySetOnHandQuantitiesInput!) {
+  inventorySetOnHandQuantities(input: $input) {
+    userErrors { field message code }
+  }
+}

@@ -14,9 +14,19 @@ class Queries:
     check_file_status = Path(
         os.path.join(_query_directory, "check_file_status.graphql")
     ).read_text(encoding="utf-8")
+
     current_app_installation = Path(
         os.path.join(_query_directory, "current_app_installation.graphql")
     ).read_text(encoding="utf-8")
-    get_product = Path(os.path.join(_query_directory, "get_product.graphql")).read_text(
-        encoding="utf-8"
-    )
+
+    get_product = Path(
+        os.path.join(_query_directory, "get_product.graphql")
+    ).read_text(encoding="utf-8")
+
+    location_primary = Path(
+        os.path.join(_query_directory, "location_primary.graphql")
+    ).read_text(encoding="utf-8")
+
+    inventory_items_by_variants = Path(
+        os.path.join(_query_directory, "inventory_items_by_variants.graphql")
+    ).read_text(encoding="utf-8")

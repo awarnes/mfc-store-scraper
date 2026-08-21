@@ -4,7 +4,7 @@ services:
     container_name: azure-db
     volumes:
       - azure:/var/lib/postgresql/data/
-      - ./src/db/base_schema.sql:/docker-entrypoint-initdb.d/01-base_schema.sql:ro
+      - ${INIT_SQL:-./src/db/base_schema.sql}:/docker-entrypoint-initdb.d/01-init.sql:ro
     ports:
       - "5999:5432"
     env_file:

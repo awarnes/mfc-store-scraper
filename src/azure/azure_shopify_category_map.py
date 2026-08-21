@@ -9,6 +9,15 @@ are available as categories for Shopify.
 """
 
 AZURE_SHOPIFY_CATEGORY_MAP = {
+    "wood-stove-hearth":"gid://shopify/TaxonomyCategory/hg-5",
+    "lip-care":"gid://shopify/TaxonomyCategory/hb-3-2-9",
+    "candles-candle-making":"gid://shopify/TaxonomyCategory/ae-2-1-2-17-1",
+    "baby-food":"gid://shopify/TaxonomyCategory/bt-10-1-3",
+    "sporting-goods":"gid://shopify/TaxonomyCategory/sg",
+    "foot-care":"gid://shopify/TaxonomyCategory/hb-3-9",
+    "flower-essences":"gid://shopify/TaxonomyCategory/hb-1-9-6-5-1",
+    "meat-alternatives": "gid://shopify/TaxonomyCategory/fb-2-19-2",
+    "garage":"gid://shopify/TaxonomyCategory/hg-12-2-6-5-2",
     "pet-care": "gid://shopify/TaxonomyCategory/ap-2",
     "herbs": "gid://shopify/TaxonomyCategory/fb-2-16-1",
     "farm-supplies": "gid://shopify/TaxonomyCategory/hb-1-9-6-5",

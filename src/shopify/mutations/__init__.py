@@ -38,3 +38,12 @@ class Mutations:
     product_option_update = Path(
         os.path.join(_query_directory, "product_option_update.graphql")
     ).read_text(encoding="utf-8")
+
+    product_handle_update = Path(
+        os.path.join(_query_directory, "product_handle_update.graphql")
+    ).read_text(encoding="utf-8")
+
+
+    inventory_set_on_hand = Path(
+        os.path.join(_query_directory, "inventory_set_on_hand.graphql")
+    ).read_text(encoding="utf-8")

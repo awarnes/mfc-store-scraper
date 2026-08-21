@@ -1,6 +1,8 @@
 mutation productVariantsBulkUpdate(
     $productId: ID!
     $variants: [ProductVariantsBulkInput!]!
+    $namespace: String!
+    $key: String!
 ) {
     productVariantsBulkUpdate(productId: $productId, variants: $variants) {
         product {

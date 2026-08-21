@@ -4,7 +4,7 @@ from typing import List
 
 from psycopg import rows, sql
 
-from src.db.postgres import Database
+from src.db.postgres import Database, MARKUP_PERCENTAGE
 from src.db.models.media import MediaModel
 from src.db.models.packaging import PackagingModel
 from src.db.models.price import PriceModel
@@ -56,7 +56,7 @@ def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
         if packaging.shopify_variant_id:
             logger.debug(f"Variant already exists, skipping [{pack.model_dump_json()}]")
             continue
-        
+
         # TODO: we'll come back to this, create_media just
         # takes too long when we're uploading everything
         shopify_media_id = None
@@ -82,7 +82,7 @@ def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
         packaging_price = PriceModel.model_validate(
             db.fetchone(
                 sql.SQL(
-                    """SELECT * FROM azure.prices WHERE packaging_code = %(packaging_code)s"""
+                    """SELECT * FROM azure.current_prices WHERE packaging_code = %(packaging_code)s"""
                 ),
                 {"packaging_code": packaging.code},
                 rows.class_row(PriceModel),
@@ -105,7 +105,7 @@ def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
             inventoryPolicy=ProductVariantInventoryPolicy.CONTINUE_SELLING,
             optionValues=[VariantOptionValueInput(name=pack.size)],
             mediaId=shopify_media_id,
-            price=f"{round(packaging_price.retail_dollars, 2):.2f}",
+            price=f"{round(packaging_price.retail_dollars / (1 - (MARKUP_PERCENTAGE/100)), 2):.2f}",
             metafields=[Metafield(value=str(pack.id))],
         )
 
@@ -126,7 +126,7 @@ def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
         },
     )
 
-    logger.debug(raw_variant_create_response)
+    ##logger.debug(raw_variant_create_response)
 
     product_variants_bulk_response = ProductVariantsBulkCreateResponse.model_validate(
         raw_variant_create_response
@@ -150,7 +150,9 @@ def create_variants_for_product(product: ProductModel) -> List[PackagingModel]:
         db.batch_execute(
             sql.SQL("""
                 UPDATE azure.packaging
-                SET shopify_variant_id = %(shopify_variant_id)s
+                SET
+                    shopify_variant_id = %(shopify_variant_id)s,
+                    shopify_updated_at = now()
                 WHERE id = %(packaging_id)s
             """),
             [

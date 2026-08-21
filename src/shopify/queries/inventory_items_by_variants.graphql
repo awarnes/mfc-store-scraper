@@ -1,0 +1,8 @@
+query VariantsInventoryItems($ids: [ID!]!) {
+  nodes(ids: $ids) {
+    ... on ProductVariant {
+      id
+      inventoryItem { id }
+    }
+  }
+}

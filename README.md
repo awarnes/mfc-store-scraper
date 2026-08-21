@@ -1,10 +1,10 @@
 # MFC Store Scraper
 
-Rather than doing the manual work of adding each product to our Shopify store individually, this scraping software will help us upload products in batches as well as keep track of which products are available for purchase and which are not.
+Rather than manually adding each product to our Shopify store, this tool scrapes supplier catalogs into a local Postgres database and syncs the results to Shopify. The database is the source of truth: scrapes mark rows as "dirty," and sync commands push only what has changed.
 
-Currently, we use the CSV upload option to bulk upload products into our Shopfiy store. More information can be found here along with a template CSV file: [Using CSV files](https://help.shopify.com/en/manual/products/import-export/using-csv)
-
-Previously, we supported scraping for the [Hummingbird Wholesale](https://hummingbirdwholesale.com) site. That code has been moved to the [archive/hummingbird](./archive/hummingbird) folder. Going forward we'll primarily support Azure Standard and possibly others going forward.
+Currently supported suppliers:
+- **Azure Standard** (primary)
+- *Hummingbird Wholesale* — legacy scraper archived under [`archive/hummingbird`](./archive/hummingbird)
 
 ## Using the repo
 
@@ -12,61 +12,113 @@ Previously, we supported scraping for the [Hummingbird Wholesale](https://hummin
 - [uv](https://docs.astral.sh/uv/)
 - [docker](https://www.docker.com/products/docker-desktop/)
 
-Optionally, you can use a database UI like [dbeaver](https://dbeaver.io/download/).
+Optionally, a database UI like [DBeaver](https://dbeaver.io/download/) is helpful.
 
 ### Getting started locally
-1. Run `uv sync` to install dependencies
-2. Create a local environment file with `cp .env.example .env.local`
-3. Start up your local docker daemon
-4. Run `docker compose up -d` to start up the local database
-5. You should now see the volume and container created. You can verify things are running by checking in the Docker Desktop app or by running `docker compose ps` and verifying that the `azure-db` service is running.
+1. Run `uv sync` to install dependencies.
+2. Create a local environment file: `cp .env.example .env.local`.
+3. Start your local Docker daemon.
+4. Run `docker compose up -d` to start the local Postgres database.
+5. Verify things are running via Docker Desktop or `docker compose ps` (the `azure-db` service should be up).
 
-Setting up `dbeaver`:
-1. Create a new PostgreSQL connection
-2. Set the Host to `localhost`
-3. Set the Port to `5999`
-4. Set the Database to `azure`
-5. Set the Username to `root`
-6. Set the Password to `localpassword` (or whatever you have set in the `.env.local` file)
+Setting up DBeaver:
+1. Create a new PostgreSQL connection.
+2. Host: `localhost`
+3. Port: `5999`
+4. Database: `azure`
+5. Username: `root`
+6. Password: `localpassword` (or whatever you set in `.env.local`)
 
-### Running the scraper
-1. Run `uv run python -m main`
-2. Verify that the scraper completes by checking the databse in DBeaver or similar access
+## CLI
 
+All commands are invoked through `main`:
 
+```bash
+uv run python -m main <command> [options]
+```
 
-> In order to update new prices, run the script and when uploading select the `Overwrite any current products...` check box. This will ensure that new prices overwrite old prices.
+Run `uv run python -m main --help` to see the full list.
+
+### Top-level commands (cross-cutting)
+
+| Command | Description |
+| --- | --- |
+| `run` | Run the full pipeline: scrape → create new → update dirty products → update dirty variants → dump DB. |
+| `status` | Show a summary of items pending sync to Shopify. `--verbose` also shows samples. |
+| `sync-products` | Create new products and push dirty ones to Shopify. `--only new` or `--only dirty` to restrict. |
+| `sync-product <id>` | Push a single product (and its variants) to Shopify. |
+| `sync-variants` | Push dirty packaging rows to Shopify (price, cost, stock). |
+| `sync-handles` | Update Shopify product handles from DB values. |
+| `dump-db` | Dump the Postgres database to a timestamped SQL file. |
+
+Common options: `--product-id`, `--packaging-code`, `--max-workers`, `--limit`.
+
+### Azure sub-commands
+
+| Command | Description |
+| --- | --- |
+| `azure scrape` | Scrape all products from Azure Standard into the DB. |
+| `azure upload-remaining-images` | Push any un-uploaded media to Shopify. |
+
+### Typical workflows
+
+**Full sync (recommended for scheduled runs):**
+```bash
+uv run python -m main run
+```
+
+**Just scrape and see what changed:**
+```bash
+uv run python -m main azure scrape
+uv run python -m main status --verbose
+```
+
+**Push only new products, in small batches, for a smoke test:**
+```bash
+uv run python -m main sync-products --only new --limit 5
+```
+
+**Update prices/stock for a single product:**
+```bash
+uv run python -m main sync-variants --product-id 12345
+```
+
+## How dirty tracking works
+
+Each scrape upserts rows into `azure.products` and `azure.packaging`. A trigger (`azure.set_updated_at_if_changed`) only bumps `updated_at` and records `last_changed_fields` when a tracked column actually changes.
+
+Sync commands compare `shopify_updated_at` against `updated_at` (and, for variants, against the latest `azure.prices.created_at`) to decide what to push. On success, `shopify_updated_at` is bumped so the row is no longer considered dirty.
+
+This means:
+- Re-running `azure scrape` with unchanged data won't dirty anything.
+- Re-running `run` after a successful pipeline is a no-op.
+- You can safely use `--limit` and re-run to chunk large syncs.
 
 ## Collaborate
 
-Send a request to `@awarnes` in Slack to get access to contribute to this repository.
+Request access from `@awarnes` in Slack.
 
-Please feel free to update anything you see fit and create a pull request on [GitHub](https://github.com/awarnes/mfc-store-scraper) with anything you'd like to change.
+Open pull requests on [GitHub](https://github.com/awarnes/mfc-store-scraper). Please update documentation and tests for anything you change.
 
-Don't forget to update any documentation and write any tests that are affected by your changes.
+We use `pylint` on each PR. Run it locally before pushing:
 
-We use pylint to check each pull request and make sure everything is in line with standard styles. You will need to lint and fix anything that doesn't pass the check before you can merge your PR. Feel free to run the check below before pushing to your branch so that you're ready to go when you make your PR.
-
-### Lint repo with pylint:
 ```bash
 uv run pylint .
 ```
 
-### Running tests:
-[[[UNDER CONSTRUCTION]]]
-Tests are written using the [unittest](https://docs.python.org/3/library/unittest.html) builtin library.
+### Running tests
+Tests use the [`unittest`](https://docs.python.org/3/library/unittest.html) module.
 
-To run all tests for the project:
+All tests:
 ```bash
 python -m unittest discover -s tests
 ```
-#### Unit tests
+
+Unit tests only:
 ```bash
 python -m unittest discover -s tests/unit
 ```
 
-#### Integration tests
-[[[UNDER CONSTRUCTION]]]
+Integration tests *(under construction)*:
 ```bash
 python -m unittest discover -s tests/integration
-```

@@ -22,5 +22,6 @@ class PackagingModel(BaseModel):
     primary_category: Optional[int] = None
     favorites: int
     next_purchase_arrival: Optional[datetime] = None
+    shopify_updated_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime

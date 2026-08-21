@@ -16,6 +16,9 @@ from src.shopify.types.requests.product_create import (
 )
 from src.shopify.types.models.product import ProductStatus
 
+class UnknownCategoryError(Exception):
+    """Raised when azure category has no Shopify mapping."""
+
 
 class ProductCreateError(Exception):
     """Generic product creation error"""
@@ -33,7 +36,12 @@ def create_product(product: ProductModel) -> ProductModel:
 
     (primary_category, secondary_category) = product.category.split(".")
 
-    shopify_category = AZURE_SHOPIFY_CATEGORY_MAP[secondary_category]
+    shopify_category = AZURE_SHOPIFY_CATEGORY_MAP.get(secondary_category)
+
+    if shopify_category is None:
+        raise UnknownCategoryError(
+            f"No Shopify category mapping for '{secondary_category}'"
+            )
 
     create_input = ProductCreateInput(
         category=shopify_category,
@@ -56,7 +64,7 @@ def create_product(product: ProductModel) -> ProductModel:
         metafields=[Metafield(value=str(product.id))],
     )
 
-    logger.debug(f"create_input: {create_input.model_dump_json()}")
+    #logger.debug(f"create_input: {create_input.model_dump_json()}")
 
     shopify = Shopify()
 
@@ -64,7 +72,7 @@ def create_product(product: ProductModel) -> ProductModel:
         Mutations.product_create, {"product": create_input.model_dump()}
     )
 
-    logger.debug(f"raw_product_create_response: {raw_product_create_response}")
+    #logger.debug(f"raw_product_create_response: {raw_product_create_response}")
 
     product_create_response = ProductCreateResponse.model_validate(
         raw_product_create_response
@@ -85,7 +93,9 @@ def create_product(product: ProductModel) -> ProductModel:
     db.batch_execute(
         sql.SQL("""
             UPDATE azure.products
-            SET shopify_product_id = %(shopify_product_id)s
+            SET
+                shopify_product_id = %(shopify_product_id)s,
+                shopify_updated_at = now()
             WHERE id = %(product_id)s;
         """),
         [

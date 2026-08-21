@@ -10,10 +10,12 @@ from src.shopify.mutations import Mutations
 
 class MediaDownloadFailedError(Exception):
     """Error thrown when a media download fails"""
-    
-    def __init__(self, message: str):
+
+    def __init__(self, message: str, code: int):
         self.message = message
+        self.code = code
         super().__init__(self.message)
+
 
 class StagedUploadFailedError(Exception):
     """Error thrown when a staged upload fails"""
@@ -28,7 +30,7 @@ class MediaManager:
 
     def download(self, file_name: str, url: str, path: str) -> str:
         """Download file at `url` to `dir` return file path"""
-        resp = requests.get(url, stream=True, timeout=5)
+        resp = requests.get(url, stream=True, timeout=10)
         if resp.status_code == 200:
             file_path = os.path.join(path, f"{file_name}.png")
 
@@ -38,7 +40,7 @@ class MediaManager:
 
             return file_path
 
-        raise MediaDownloadFailedError()
+        raise MediaDownloadFailedError(message=f'Download response code: {resp.status_code}', code=resp.status_code)
 
     def upload_image_to_staged_target(self, staged_target: dict, image_path: str):
         """
@@ -77,7 +79,7 @@ class MediaManager:
                 )
             }
 
-            response = requests.post(url, data=data, files=files, timeout=5)
+            response = requests.post(url, data=data, files=files, timeout=10)
 
         # Staged upload services usually return 201 or 204 on success
         if response.status_code not in (200, 201, 204):

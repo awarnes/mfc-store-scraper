@@ -1,6 +1,7 @@
 """Pydantic model for the `azure.media` table"""
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -13,5 +14,6 @@ class MediaModel(BaseModel):
     original_url: str
     file_name: str | None = None
     shopify_media_id: str | None = None
+    shopify_updated_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime

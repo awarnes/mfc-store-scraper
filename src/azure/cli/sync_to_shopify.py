@@ -17,6 +17,7 @@ from src.shopify.actions import (
 )
 from src.shopify.media_manager import StagedUploadFailedError, MediaDownloadFailedError
 
+
 def sync_to_shopify():
     logger.info("Syncing products to Shopify....")
     database = Database()
@@ -27,7 +28,7 @@ def sync_to_shopify():
         rows.class_row(ProductModel),
     )
     failed_products: List[tuple[ProductModel, str]] = []
-    try: 
+    try:
         with Progress(
             SpinnerColumn(),
             *Progress.get_default_columns(),
@@ -37,7 +38,7 @@ def sync_to_shopify():
             task = progress.add_task(
                 f"Syncing {len(products)} products...", total=len(products)
             )
-            
+
             for product in products:
                 if product.shopify_product_id:
                     progress.console.print("Product exists, skipping...")
@@ -65,6 +66,6 @@ def sync_to_shopify():
 
                 progress.advance(task)
     finally:
-        with open('errors.json', 'w+', encoding='utf-8') as f:
+        with open("errors.json", "w+", encoding="utf-8") as f:
             logger.error(json.dumps(failed_products))
             f.write(json.dumps(failed_products))

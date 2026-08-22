@@ -6,9 +6,41 @@ from typing import Dict, List
 
 import requests
 from psycopg.types.json import Jsonb
+from urllib.parse import urlencode
+import json
 
 from src.lib.logger import logger
 from src.settings import settings
+
+ATTRIBUTES_TO_RETRIEVE = [
+    "id",
+    "brand.name",
+    "name",
+    "substitutions",
+    "favorites",
+    "storageClimate",
+    "slug",
+    "maxStorageDays",
+    "treatAsActive",
+    "unshippableRegions",
+    "packaging.code",
+    "packaging.price",
+    "packaging.weight",
+    "packaging.volume",
+    "packaging.tags",
+    "packaging.images",
+    "packaging.size",
+    "packaging.stock",
+    "packaging.next-purchase-arrival",
+    "packaging.favorites",
+    "packaging.bargain-bin-notes",
+    "packaging.rewardsEnabled",
+    "packaging.freightHandlingRequired",
+    "packaging.vendorShortedLastPurchase",
+    "packaging.primary-category",
+    "description",
+    "shortDescription",
+]
 
 
 class AzureScraper:
@@ -73,9 +105,20 @@ class AzureScraper:
         return self.__categories
 
     def get_products_for_category(self, category_id, page=0):
-        """Get all products for a given category"""
-        # pylint: disable=line-too-long
-        params = f"query=&filters=packaging.stock%20%3E%200&attributesToHighlight=&attributesToRetrieve=id%2Cbrand.name%2Cname%2Csubstitutions%2Cfavorites%2CstorageClimate%2Cslug%2CmaxStorageDays%2CtreatAsActive%2CunshippableRegions%2Cpackaging.code%2Cpackaging.price%2Cpackaging.weight%2Cpackaging.volume%2Cpackaging.tags%2Cpackaging.images%2Cpackaging.size%2Cpackaging.stock%2Cpackaging.next-purchase-arrival%2Cpackaging.favorites%2Cpackaging.bargain-bin-notes%2Cpackaging.rewardsEnabled%2Cpackaging.freightHandlingRequired%2Cpackaging.vendorShortedLastPurchase%2Cpackaging.primary-category%2Cdescription%2CshortDescription&queryType=prefixNone&facetFilters=%5B%5B%5D%2C%22category-ids%3A{category_id}%22%2C%5B%5D%5D&optionalFilters=%5B%22isPromoted%3Atrue%22%5D&hitsPerPage=5000&page={page}"
+        """Get all products for a given category."""
+        params = urlencode(
+            {
+                "query": "",
+                "filters": "packaging.stock > 0",
+                "attributesToHighlight": "",
+                "attributesToRetrieve": ",".join(ATTRIBUTES_TO_RETRIEVE),
+                "queryType": "prefixNone",
+                "facetFilters": json.dumps([[], f"category-ids:{category_id}", []]),
+                "optionalFilters": json.dumps(["isPromoted:true"]),
+                "hitsPerPage": 5000,
+                "page": page,
+            }
+        )
         return self._post("products", params)
 
     def get_all_products(self):
@@ -86,8 +129,11 @@ class AzureScraper:
             page = 0
             num_pages = 1
             while page < num_pages:
+
                 category_id = category.get("id")
-                category_name = f"{category.get('ancestors', {'slug': 'Root'})[0].get('slug')}.{category.get('slug')}"
+                ancestors = category.get("ancestors") or [{"slug": "Root"}]
+                parent_slug = ancestors[0].get("slug")
+                category_name = f"{parent_slug}.{category.get('slug')}"
 
                 resp = self.get_products_for_category(category_id, page)
                 if resp.get("nbHits") >= 2000:

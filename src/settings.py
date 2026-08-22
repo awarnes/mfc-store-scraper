@@ -10,12 +10,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Determine which env files to load based on ENV variable
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = os.getenv("ENV")
 env_files = []
+env_files.extend([str(BASE_DIR / ".env.local"), str(BASE_DIR / ".env")])
 
+env = os.getenv("ENV")
 if env:
     env_files.append(str(BASE_DIR / f".env.{env}"))
-env_files.extend([str(BASE_DIR / ".env.local"), str(BASE_DIR / ".env")])
+
 
 
 class Settings(BaseSettings):
@@ -50,6 +51,8 @@ class Settings(BaseSettings):
 
     shopify_client_id: str
     shopify_client_secret: str
+    shopify_shop_domain: str
+
 
     @field_validator("top_level_categories", mode="before")
     @classmethod

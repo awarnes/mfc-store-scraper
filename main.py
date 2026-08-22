@@ -4,7 +4,6 @@ import typer
 
 import src.azure.cli
 import src.cli
-from src.lib.logger import logger
 
 app = typer.Typer()
 

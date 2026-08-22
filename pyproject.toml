@@ -11,9 +11,13 @@ dependencies = [
     "psycopg[binary]>=3.3.3",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
-    "pylint>=4.0.4",
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "requests-unixsocket>=0.4.1",
     "typer>=0.24.1",
+]
+
+[dependency-groups]
+dev = [
+    "pylint>=4.0.4",
 ]

@@ -19,40 +19,99 @@ class ShopifyThrottledError(ShopifyQueryError):
     """Raised when Shopify keeps throttling us past MAX_RETRIES."""
 
 
+class ShopifyConnectionError(ShopifyQueryError):
+    """Raised when we can't reach or authenticate to the store."""
+
+
 # Tunables
 MAX_RETRIES = 5
-# If remaining bucket < MIN_HEADROOM * last_cost, sleep to refill before returning.
 MIN_HEADROOM_MULTIPLIER = 4
-# Absolute floor to always leave in the bucket.
 MIN_HEADROOM_ABSOLUTE = 100
+
+API_VERSION = "2026-01"
 
 
 class Shopify:
-    """Class for handling Shopify GraphQL queries and mutations"""
+    """Client for a single Shopify store's Admin GraphQL API.
 
-    _graphql_url = (
-        "https://montavillafoodcoop.myshopify.com/admin/api/2026-01/graphql.json"
-    )
-    _auth_url = "https://montavillafoodcoop.myshopify.com/admin/oauth/access_token"
+    Store domain and credentials are read from settings. Only one store
+    is supported per session.
+    """
 
     access_token: str | None = None
 
-    def get_token(self):
+    def __init__(
+        self,
+        shop_domain: str | None = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        api_version: str = API_VERSION,
+    ):
+        self.shop_domain = shop_domain or settings.shopify_shop_domain
+        self.client_id = client_id or settings.shopify_client_id
+        self.client_secret = client_secret or settings.shopify_client_secret
+        self.api_version = api_version
+
+    @property
+    def graphql_url(self) -> str:
+        return f"https://{self.shop_domain}/admin/api/{self.api_version}/graphql.json"
+
+    @property
+    def auth_url(self) -> str:
+        return f"https://{self.shop_domain}/admin/oauth/access_token"
+
+    def get_token(self) -> str:
         """Get bearer token from Shopify"""
-        resp = requests.post(
-            self._auth_url,
-            headers={"content-type": "application/json"},
-            json={
-                "grant_type": "client_credentials",
-                "client_id": settings.shopify_client_id,
-                "client_secret": settings.shopify_client_secret,
-            },
-            timeout=5,
-        )
+        try:
+            resp = requests.post(
+                self.auth_url,
+                headers={"content-type": "application/json"},
+                json={
+                    "grant_type": "client_credentials",
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                },
+                timeout=5,
+            )
+        except requests.RequestException as e:
+            raise ShopifyConnectionError(
+                f"Could not reach {self.shop_domain}: {e}"
+            ) from e
+
+        if not resp.ok:
+            raise ShopifyConnectionError(
+                f"Auth failed for {self.shop_domain}: "
+                f"HTTP {resp.status_code} {resp.text[:200]}"
+            )
 
         access_token = resp.json().get("access_token")
+        if not access_token:
+            raise ShopifyConnectionError(
+                f"No access_token in auth response from {self.shop_domain}"
+            )
+
         self.access_token = access_token
         return self.access_token
+
+    def check_connection(self) -> dict:
+        """Verify credentials and reachability. Returns basic app info."""
+        try:
+            self.get_token()
+            resp = self.current_app()
+        except ShopifyConnectionError:
+            raise
+        except Exception as e:
+            raise ShopifyConnectionError(
+                f"Connection check failed for {self.shop_domain}: {e}"
+            ) from e
+
+        if resp.get("errors"):
+            raise ShopifyConnectionError(
+                f"Connection check errors: {resp['errors']}"
+            )
+
+        logger.info(f"Connected to {self.shop_domain}")
+        return resp.get("data", {})
 
     # ------------------------------------------------------------------ #
     # Internal helpers
@@ -77,7 +136,6 @@ class Shopify:
 
     @classmethod
     def _sleep_to_refill(cls, throttle: dict, target: float) -> None:
-        """Sleep just long enough for the bucket to reach `target`."""
         available = float(throttle.get("currentlyAvailable", 0))
         restore = float(throttle.get("restoreRate", 0)) or 1.0
         if available >= target:
@@ -97,7 +155,7 @@ class Shopify:
 
         for attempt in range(1, MAX_RETRIES + 1):
             resp = requests.post(
-                self._graphql_url,
+                self.graphql_url,
                 headers={
                     "content-type": "application/json",
                     "x-shopify-access-token": self.access_token,
@@ -115,8 +173,6 @@ class Shopify:
 
             if self._is_throttled(payload):
                 throttle = self._throttle_status(payload) or {}
-                # Sleep until the bucket has enough for one query of typical size,
-                # plus a small jittered backoff.
                 target = max(
                     MIN_HEADROOM_ABSOLUTE,
                     float(throttle.get("maximumAvailable", 1000)) / 2,
@@ -128,7 +184,6 @@ class Shopify:
                 )
                 continue
 
-            # Success — proactively pace if we're running low.
             throttle = self._throttle_status(payload)
             if throttle:
                 last_cost = self._actual_cost(payload)

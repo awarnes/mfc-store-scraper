@@ -10,8 +10,24 @@ from src.shopify.actions import (
     run_pipeline
 )
 from src.cli.actions.status import sync_status, sync_samples
+from src.shopify.shopify import Shopify, ShopifyConnectionError
+
 
 app = typer.Typer()
+
+
+@app.command()
+def check_connection():
+    """Verify Shopify credentials and reachability."""
+    shop = Shopify()
+    try:
+        info = shop.check_connection()
+        app_name = info.get("currentAppInstallation", {}).get("app", {}).get("title", "?")
+        typer.echo(f"✓ Connected to {shop.shop_domain} as {app_name}")
+    except ShopifyConnectionError as e:
+        typer.echo(f"✗ Connection failed: {e}", err=True)
+        raise typer.Exit(code=1)
+
 
 @app.command()
 def run():

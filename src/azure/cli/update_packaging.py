@@ -16,7 +16,7 @@ def update_packaging(packaging: PackagingModel):
         try:
             updated_variant = update_variant(packaging)
         except ProductVariantUpdateError as err:
-            logger.error((packaging, f"pack error {err.message}"))
+            logger.error((packaging, f"pack error {err}"))
             return
     except Exception as err:
         print(err)
